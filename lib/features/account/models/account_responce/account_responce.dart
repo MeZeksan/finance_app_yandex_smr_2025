@@ -1,4 +1,4 @@
-import 'package:finance_app_yandex_smr_2025/models/stat_item/stat_item.dart';
+import 'package:finance_app_yandex_smr_2025/features/category/models/stat_item/stat_item.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'account_responce.freezed.dart';

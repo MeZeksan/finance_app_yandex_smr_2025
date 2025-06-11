@@ -1,5 +1,5 @@
-import 'package:finance_app_yandex_smr_2025/models/account/account_brief/account_brief.dart';
-import 'package:finance_app_yandex_smr_2025/models/category/category.dart';
+import 'package:finance_app_yandex_smr_2025/features/account/models/account_brief/account_brief.dart';
+import 'package:finance_app_yandex_smr_2025/features/category/models/category/category.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'transaction_responce.freezed.dart';

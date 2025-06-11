@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:finance_app_yandex_smr_2025/models/account/account_state/account_state.dart';
+import 'package:finance_app_yandex_smr_2025/features/account/models/account_state/account_state.dart';
 
 part 'account_history.freezed.dart';
 part 'account_history.g.dart';
