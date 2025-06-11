@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AccountCreateRequest {
   String get name; //основной счет
-  String get balance; // 1000ю00
+  String get balance; // 1000.00
   String get currency;
 
   /// Create a copy of AccountCreateRequest
@@ -107,7 +107,7 @@ class _AccountCreateRequest implements AccountCreateRequest {
 //основной счет
   @override
   final String balance;
-// 1000ю00
+// 1000.00
   @override
   final String currency;
 

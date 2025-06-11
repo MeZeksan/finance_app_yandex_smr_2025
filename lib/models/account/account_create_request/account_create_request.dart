@@ -7,7 +7,7 @@ part 'account_create_request.g.dart';
 abstract class AccountCreateRequest with _$AccountCreateRequest {
   factory AccountCreateRequest({
     required String name, //основной счет
-    required String balance, // 1000ю00
+    required String balance, // 1000.00
     required String currency, // RUB
   }) = _AccountCreateRequest;
 
