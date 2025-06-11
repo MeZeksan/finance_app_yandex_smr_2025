@@ -8,7 +8,6 @@ part 'account_responce.g.dart';
 abstract class AccountResponce with _$AccountResponce {
   factory AccountResponce({
     required int id, //1
-
     required String name, // основной счет
     required String balance, //1000.00
     required String currency, // RUB
