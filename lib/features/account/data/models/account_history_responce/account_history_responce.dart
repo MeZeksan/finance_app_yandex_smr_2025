@@ -1,4 +1,4 @@
-import 'package:finance_app_yandex_smr_2025/features/account/models/account_history.dart/account_history.dart';
+import 'package:finance_app_yandex_smr_2025/features/account/data/models/account_history.dart/account_history.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'account_history_responce.freezed.dart';
