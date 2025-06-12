@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Category {
   int get id; //1
-  int get name; //Зарплата
+  String get name; //Зарплата
   String get emoji; //💀
   bool get isIncome;
 
@@ -57,7 +57,7 @@ abstract mixin class $CategoryCopyWith<$Res> {
   factory $CategoryCopyWith(Category value, $Res Function(Category) _then) =
       _$CategoryCopyWithImpl;
   @useResult
-  $Res call({int id, int name, String emoji, bool isIncome});
+  $Res call({int id, String name, String emoji, bool isIncome});
 }
 
 /// @nodoc
@@ -85,7 +85,7 @@ class _$CategoryCopyWithImpl<$Res> implements $CategoryCopyWith<$Res> {
       name: null == name
           ? _self.name
           : name // ignore: cast_nullable_to_non_nullable
-              as int,
+              as String,
       emoji: null == emoji
           ? _self.emoji
           : emoji // ignore: cast_nullable_to_non_nullable
@@ -113,7 +113,7 @@ class _Category implements Category {
   final int id;
 //1
   @override
-  final int name;
+  final String name;
 //Зарплата
   @override
   final String emoji;
@@ -165,7 +165,7 @@ abstract mixin class _$CategoryCopyWith<$Res>
       __$CategoryCopyWithImpl;
   @override
   @useResult
-  $Res call({int id, int name, String emoji, bool isIncome});
+  $Res call({int id, String name, String emoji, bool isIncome});
 }
 
 /// @nodoc
@@ -193,7 +193,7 @@ class __$CategoryCopyWithImpl<$Res> implements _$CategoryCopyWith<$Res> {
       name: null == name
           ? _self.name
           : name // ignore: cast_nullable_to_non_nullable
-              as int,
+              as String,
       emoji: null == emoji
           ? _self.emoji
           : emoji // ignore: cast_nullable_to_non_nullable

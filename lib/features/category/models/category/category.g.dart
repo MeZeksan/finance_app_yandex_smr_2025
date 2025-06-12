@@ -8,7 +8,7 @@ part of 'category.dart';
 
 _Category _$CategoryFromJson(Map<String, dynamic> json) => _Category(
       id: (json['id'] as num).toInt(),
-      name: (json['name'] as num).toInt(),
+      name: json['name'] as String,
       emoji: json['emoji'] as String,
       isIncome: json['isIncome'] as bool,
     );

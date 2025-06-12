@@ -7,7 +7,7 @@ part 'category.g.dart';
 abstract class Category with _$Category {
   factory Category({
     required int id, //1
-    required int name, //Зарплата
+    required String name, //Зарплата
     required String emoji, //💀
     required bool isIncome, // true
   }) = _Category;
