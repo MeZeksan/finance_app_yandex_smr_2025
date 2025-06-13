@@ -7,7 +7,7 @@ part 'stat_item.g.dart';
 abstract class StatItem with _$StatItem {
   factory StatItem({
     required int categoryId, //1
-    required int categoryName, //Зарплата
+    required String categoryName, //Зарплата
     required String emoji, //💀
     required String amount, //5000.00
   }) = _StatItem;

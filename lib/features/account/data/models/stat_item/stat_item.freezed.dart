@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$StatItem {
   int get categoryId; //1
-  int get categoryName; //Зарплата
+  String get categoryName; //Зарплата
   String get emoji; //💀
   String get amount;
 
@@ -59,7 +59,7 @@ abstract mixin class $StatItemCopyWith<$Res> {
   factory $StatItemCopyWith(StatItem value, $Res Function(StatItem) _then) =
       _$StatItemCopyWithImpl;
   @useResult
-  $Res call({int categoryId, int categoryName, String emoji, String amount});
+  $Res call({int categoryId, String categoryName, String emoji, String amount});
 }
 
 /// @nodoc
@@ -87,7 +87,7 @@ class _$StatItemCopyWithImpl<$Res> implements $StatItemCopyWith<$Res> {
       categoryName: null == categoryName
           ? _self.categoryName
           : categoryName // ignore: cast_nullable_to_non_nullable
-              as int,
+              as String,
       emoji: null == emoji
           ? _self.emoji
           : emoji // ignore: cast_nullable_to_non_nullable
@@ -115,7 +115,7 @@ class _StatItem implements StatItem {
   final int categoryId;
 //1
   @override
-  final int categoryName;
+  final String categoryName;
 //Зарплата
   @override
   final String emoji;
@@ -169,7 +169,7 @@ abstract mixin class _$StatItemCopyWith<$Res>
       __$StatItemCopyWithImpl;
   @override
   @useResult
-  $Res call({int categoryId, int categoryName, String emoji, String amount});
+  $Res call({int categoryId, String categoryName, String emoji, String amount});
 }
 
 /// @nodoc
@@ -197,7 +197,7 @@ class __$StatItemCopyWithImpl<$Res> implements _$StatItemCopyWith<$Res> {
       categoryName: null == categoryName
           ? _self.categoryName
           : categoryName // ignore: cast_nullable_to_non_nullable
-              as int,
+              as String,
       emoji: null == emoji
           ? _self.emoji
           : emoji // ignore: cast_nullable_to_non_nullable

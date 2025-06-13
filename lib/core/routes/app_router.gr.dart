@@ -14,7 +14,7 @@ part of 'app_router.dart';
 /// [AccountScreen]
 class AccountRoute extends PageRouteInfo<void> {
   const AccountRoute({List<PageRouteInfo>? children})
-      : super(AccountRoute.name, initialChildren: children);
+    : super(AccountRoute.name, initialChildren: children);
 
   static const String name = 'AccountRoute';
 
@@ -30,7 +30,7 @@ class AccountRoute extends PageRouteInfo<void> {
 /// [ArticlesScreen]
 class ArticlesRoute extends PageRouteInfo<void> {
   const ArticlesRoute({List<PageRouteInfo>? children})
-      : super(ArticlesRoute.name, initialChildren: children);
+    : super(ArticlesRoute.name, initialChildren: children);
 
   static const String name = 'ArticlesRoute';
 
@@ -46,7 +46,7 @@ class ArticlesRoute extends PageRouteInfo<void> {
 /// [ExpensesScreen]
 class ExpensesRoute extends PageRouteInfo<void> {
   const ExpensesRoute({List<PageRouteInfo>? children})
-      : super(ExpensesRoute.name, initialChildren: children);
+    : super(ExpensesRoute.name, initialChildren: children);
 
   static const String name = 'ExpensesRoute';
 
@@ -62,7 +62,7 @@ class ExpensesRoute extends PageRouteInfo<void> {
 /// [IncomesScreen]
 class IncomesRoute extends PageRouteInfo<void> {
   const IncomesRoute({List<PageRouteInfo>? children})
-      : super(IncomesRoute.name, initialChildren: children);
+    : super(IncomesRoute.name, initialChildren: children);
 
   static const String name = 'IncomesRoute';
 
@@ -78,7 +78,7 @@ class IncomesRoute extends PageRouteInfo<void> {
 /// [MainWrapperPage]
 class MainWrapperRoute extends PageRouteInfo<void> {
   const MainWrapperRoute({List<PageRouteInfo>? children})
-      : super(MainWrapperRoute.name, initialChildren: children);
+    : super(MainWrapperRoute.name, initialChildren: children);
 
   static const String name = 'MainWrapperRoute';
 
@@ -94,7 +94,7 @@ class MainWrapperRoute extends PageRouteInfo<void> {
 /// [SettingsScreen]
 class SettingsRoute extends PageRouteInfo<void> {
   const SettingsRoute({List<PageRouteInfo>? children})
-      : super(SettingsRoute.name, initialChildren: children);
+    : super(SettingsRoute.name, initialChildren: children);
 
   static const String name = 'SettingsRoute';
 
