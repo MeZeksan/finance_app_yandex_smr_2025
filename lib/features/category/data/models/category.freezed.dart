@@ -100,12 +100,13 @@ class _$CategoryCopyWithImpl<$Res> implements $CategoryCopyWith<$Res> {
 
 /// @nodoc
 @JsonSerializable()
-class _Category implements Category {
+class _Category extends Category {
   _Category(
       {required this.id,
       required this.name,
       required this.emoji,
-      required this.isIncome});
+      required this.isIncome})
+      : super._();
   factory _Category.fromJson(Map<String, dynamic> json) =>
       _$CategoryFromJson(json);
 
