@@ -53,7 +53,7 @@ class ExpensesRoute extends PageRouteInfo<void> {
   static PageInfo page = PageInfo(
     name,
     builder: (data) {
-      return const ExpensesScreen();
+      return  ExpensesScreen();
     },
   );
 }
@@ -69,7 +69,7 @@ class IncomesRoute extends PageRouteInfo<void> {
   static PageInfo page = PageInfo(
     name,
     builder: (data) {
-      return const IncomesScreen();
+      return  IncomesScreen();
     },
   );
 }
