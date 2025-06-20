@@ -1,7 +1,8 @@
 import 'package:finance_app_yandex_smr_2025/core/routes/app_router.dart';
 import 'package:flutter/material.dart';
 
-void main() {
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(MyApp());
 }
 

@@ -9,60 +9,58 @@ class MainWrapperPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: AutoTabsScaffold(
-        routes: const [
-          ExpensesRoute(),
-          IncomesRoute(),
-          AccountRoute(),
-          ArticlesRoute(),
-          SettingsRoute(),
-        ],
-        bottomNavigationBuilder: (_, tabsRouter) {
-          return BottomNavigationBar(
-            backgroundColor: Color(0xffF3EDF7),
-            currentIndex: tabsRouter.activeIndex,
-            onTap: tabsRouter.setActiveIndex,
-            type: BottomNavigationBarType.fixed,
-            selectedLabelStyle: const TextStyle().copyWith(fontSize: 0),
-            unselectedLabelStyle: const TextStyle().copyWith(fontSize: 0),
-            selectedItemColor: const Color(0xFF4CAF50),
-            unselectedItemColor: const Color(0xff49454F),
-            items: [
-              _buildNavItem(
-                context,
-                'assets/icons/expanses.svg',
-                tabsRouter.activeIndex == 0,
-                'Расходы',
-              ),
-              _buildNavItem(
-                context,
-                'assets/icons/incomes.svg',
-                tabsRouter.activeIndex == 1,
-                'Доходы',
-              ),
-              _buildNavItem(
-                context,
-                'assets/icons/account.svg',
-                tabsRouter.activeIndex == 2,
-                'Счет',
-              ),
-              _buildNavItem(
-                context,
-                'assets/icons/articles.svg',
-                tabsRouter.activeIndex == 3,
-                'Статьи',
-              ),
-              _buildNavItem(
-                context,
-                'assets/icons/settings.svg',
-                tabsRouter.activeIndex == 4,
-                'Настройки',
-              ),
-            ],
-          );
-        },
-      ),
+    return AutoTabsScaffold(
+      routes: const [
+        ExpensesRoute(),
+        IncomesRoute(),
+        AccountRoute(),
+        ArticlesRoute(),
+        SettingsRoute(),
+      ],
+      bottomNavigationBuilder: (_, tabsRouter) {
+        return BottomNavigationBar(
+          backgroundColor: Color(0xffF3EDF7),
+          currentIndex: tabsRouter.activeIndex,
+          onTap: tabsRouter.setActiveIndex,
+          type: BottomNavigationBarType.fixed,
+          selectedLabelStyle: const TextStyle().copyWith(fontSize: 0),
+          unselectedLabelStyle: const TextStyle().copyWith(fontSize: 0),
+          selectedItemColor: const Color(0xFF4CAF50),
+          unselectedItemColor: const Color(0xff49454F),
+          items: [
+            _buildNavItem(
+              context,
+              'assets/icons/expanses.svg',
+              tabsRouter.activeIndex == 0,
+              'Расходы',
+            ),
+            _buildNavItem(
+              context,
+              'assets/icons/incomes.svg',
+              tabsRouter.activeIndex == 1,
+              'Доходы',
+            ),
+            _buildNavItem(
+              context,
+              'assets/icons/account.svg',
+              tabsRouter.activeIndex == 2,
+              'Счет',
+            ),
+            _buildNavItem(
+              context,
+              'assets/icons/articles.svg',
+              tabsRouter.activeIndex == 3,
+              'Статьи',
+            ),
+            _buildNavItem(
+              context,
+              'assets/icons/settings.svg',
+              tabsRouter.activeIndex == 4,
+              'Настройки',
+            ),
+          ],
+        );
+      },
     );
   }
 
