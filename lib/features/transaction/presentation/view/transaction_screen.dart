@@ -1,10 +1,9 @@
-import 'package:finance_app_yandex_smr_2025/features/account/data/models/account_brief/account_brief.dart';
-import 'package:finance_app_yandex_smr_2025/features/category/data/models/category.dart';
-import 'package:finance_app_yandex_smr_2025/features/transaction/data/models/transaction/transaction_responce/transaction_responce.dart';
 import 'package:finance_app_yandex_smr_2025/features/transaction/domain/repository/transaction_repository.dart';
+import 'package:finance_app_yandex_smr_2025/features/transaction/presentation/bloc/transaction.bloc.dart';
+
 import 'package:finance_app_yandex_smr_2025/features/transaction/presentation/widgets/widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class TransactionsScreen extends StatelessWidget {
   final bool isIncome;
@@ -12,13 +11,17 @@ class TransactionsScreen extends StatelessWidget {
 
   const TransactionsScreen({
     super.key,
-    required this.isIncome, required this.repository,
-
+    required this.isIncome,
+    required this.repository,
   });
 
   @override
   Widget build(BuildContext context) {
-    return TransactionsView(isIncome: isIncome);
+    return BlocProvider(
+      create: (context) => TransactionBloc(repository: repository)
+        ..add(LoadTodayTransactions(isIncome: isIncome)),
+      child: TransactionsView(isIncome: isIncome),
+    );
   }
 }
 
@@ -32,56 +35,11 @@ class TransactionsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Фиксированный список транзакций
-    final transactions = [
-      TransactionResponce(
-        id: 1,
-      account: AccountBrief(
-        id: 1,
-        name: 'Основной счет',
-        balance: '24334',
-        currency: 'RUB',
-      ),
-      category: Category(id: 1, name: 'Зарплата', emoji: '💰', isIncome: true),
-      amount: '50000.00',
-      transactionDate: DateTime.now().subtract(const Duration(days: 1)),
-      comment: 'Зарплата за месяц',
-      createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      updatedAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      TransactionResponce(
-       id: 2,
-      account: AccountBrief(
-        id: 1,
-        name: 'Основной счет',
-        currency: 'RUB',
-        balance: '34356',
-      ),
-      category: Category(id: 2, name: 'Продукты', emoji: '🛒', isIncome: false),
-      amount: '2500.50',
-      transactionDate: DateTime.now().subtract(const Duration(hours: 6)),
-      comment: null,
-      createdAt: DateTime.now().subtract(const Duration(hours: 6)),
-      updatedAt: DateTime.now().subtract(const Duration(hours: 6)),
-      ),
-    ];
-
-    // Фильтруем транзакции по типу (доход/расход)
-    final filteredTransactions = transactions
-        .where((t) => t.category.isIncome == isIncome)
-        .toList();
-
-    // Считаем общую сумму
-    final totalAmount = filteredTransactions.fold(
-      0.0,
-      (sum, t) => sum + (double.tryParse(t.amount) ?? 0.0));
-    final formatter = NumberFormat('#,##0', 'ru_RU');
-    final formattedTotalAmount = '${formatter.format(totalAmount.round())} ₽';
-
     return Scaffold(
       backgroundColor: const Color(0xFFFEF7FF),
       body: Column(
         children: [
+          // Header
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -104,7 +62,10 @@ class TransactionsView extends StatelessWidget {
                 ),
                 IconButton(
                   onPressed: () {
-                    // Обновление данных (пустая функция)
+                    
+                    context.read<TransactionBloc>().add(
+                      LoadTodayTransactions(isIncome: isIncome),
+                    );
                   },
                   icon: const Icon(
                     Icons.refresh,
@@ -114,86 +75,134 @@ class TransactionsView extends StatelessWidget {
               ],
             ),
           ),
-        
+
+          // Content
           Expanded(
-            child: Column(
-              children: [
-                // Блок "Всего"
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFD4FAE6),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      const Text(
-                        
-                        'Всего',
-                        style: TextStyle(
-                          color: Color(0xFF1D1B20),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
+            child: BlocBuilder<TransactionBloc, TransactionState>(
+              builder: (context, state) {
+                if (state is TransactionLoading) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+            
+                if (state is TransactionError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: Colors.red[400],
                         ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        formattedTotalAmount,
-                        style: const TextStyle(
-                          color: Color(0xFF1D1B20),
-                          fontSize: 18,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 12,),
-                // Список транзакций
-                Expanded(
-                  child: filteredTransactions.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                isIncome ? Icons.trending_up : Icons.trending_down,
-                                size: 64,
-                                color: Colors.grey[400],
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                isIncome 
-                                    ? 'Нет доходов за сегодня'
-                                    : 'Нет расходов за сегодня',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
+                        const SizedBox(height: 16),
+                        Text(
+                          state.message,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.red[600],
                           ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          itemCount: filteredTransactions.length,
-                          itemBuilder: (context, index) {
-                            final transaction = filteredTransactions[index];
-                            return TransactionTile(transaction: transaction);
-                          },
+                          textAlign: TextAlign.center,
                         ),
-                ),
-              ],
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                            context.read<TransactionBloc>().add(
+                              LoadTodayTransactions(isIncome: isIncome),
+                            );
+                          },
+                          child: const Text('Повторить'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                
+                if (state is TransactionLoaded) {
+                  return Column(
+                    children: [
+                      // Контейнер "Всего"
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFD4FAE6),
+                        ),
+                        child: Row(
+                          children: [
+                            const Text(
+                              'Всего',
+                              style: TextStyle(
+                                color: Color(0xFF1D1B20),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              state.totalAmount,
+                              style: const TextStyle(
+                                color: Color(0xFF1D1B20),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      Expanded(
+                        child: state.transactions.isEmpty
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      isIncome ? Icons.trending_up : Icons.trending_down,
+                                      size: 64,
+                                      color: Colors.grey[400],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      isIncome 
+                                          ? 'Нет доходов за сегодня'
+                                          : 'Нет расходов за сегодня',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : ListView.builder(
+                                itemCount: state.transactions.length,
+                                itemBuilder: (context, index) {
+                                  return TransactionTile(
+                                    transaction: state.transactions[index],
+                                    isFirst: index == 0,
+                                    isLast: index == state.transactions.length - 1,
+                                  );
+                                },
+                              )
+                      ),
+                      
+                    ],
+                  );
+                }
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              },
             ),
           ),
         ],
       ),
-      
+
       // Floating Action Button
       floatingActionButton: FloatingActionButton(
-        shape: CircleBorder(),
-
+        shape: const CircleBorder(),
         onPressed: () {
           // TODO: Навигация к экрану добавления транзакции
         },
