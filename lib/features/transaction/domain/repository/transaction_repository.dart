@@ -10,4 +10,11 @@ abstract class TransactionRepository {
       int transactionId, TransactionRequest request);
 
   Future<bool> deleteTransaction(int transactionId);
+
+  Future<List<TransactionResponce>> getTransactionsByDateAndType({
+    required DateTime dateFrom,
+    required DateTime dateTo,
+    required bool isIncome,
+  });
+
 }
