@@ -18,6 +18,7 @@ class ExpensesScreen extends StatelessWidget {
     return TransactionsScreen(
       isIncome: false,
       repository: repository,
+      buttonTag: 'expensesButtonTag'
     );
   }
 }

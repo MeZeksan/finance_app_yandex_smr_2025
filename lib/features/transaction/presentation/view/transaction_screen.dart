@@ -1,3 +1,4 @@
+import 'package:finance_app_yandex_smr_2025/features/history/presentation/view/history_screen.dart';
 import 'package:finance_app_yandex_smr_2025/features/transaction/domain/repository/transaction_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/transaction/presentation/bloc/transaction.bloc.dart';
 
@@ -8,11 +9,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class TransactionsScreen extends StatelessWidget {
   final bool isIncome;
   final TransactionRepository repository;
+  final String buttonTag;
 
   const TransactionsScreen({
     super.key,
     required this.isIncome,
-    required this.repository,
+    required this.repository, 
+    required this.buttonTag,
+
   });
 
   @override
@@ -20,59 +24,65 @@ class TransactionsScreen extends StatelessWidget {
     return BlocProvider(
       create: (context) => TransactionBloc(repository: repository)
         ..add(LoadTodayTransactions(isIncome: isIncome)),
-      child: TransactionsView(isIncome: isIncome),
+      child: TransactionsView(isIncome: isIncome, buttonTag: buttonTag,),
     );
   }
 }
 
 class TransactionsView extends StatelessWidget {
   final bool isIncome;
-
+  final String buttonTag;
   const TransactionsView({
     super.key,
     required this.isIncome,
+    required this.buttonTag,
   });
 
   @override
   Widget build(BuildContext context) {
+    final double statusBarHeight = MediaQuery.of(context).padding.top;
+    final double topPadding = statusBarHeight + 16.0;
+
     return Scaffold(
       backgroundColor: const Color(0xFFFEF7FF),
       body: Column(
         children: [
-          // Header
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: const BoxDecoration(
               color: Color(0xFFb2AE881),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      isIncome ? 'Доходы сегодня' : 'Расходы сегодня',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w400,
+            child: Padding(
+              padding:  EdgeInsets.only(top:topPadding),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Text(
+                    isIncome ? 'Доходы сегодня' : 'Расходы сегодня',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFF1D1B20),
+                    ),
+                  ),
+                  Positioned(
+                    right: 0,
+                    child: IconButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => HistoryScreen(isIncome: isIncome)),
+                        );
+                      },
+                      icon: const Icon(
+                        Icons.refresh,
                         color: Color(0xFF1D1B20),
                       ),
                     ),
                   ),
-                ),
-                IconButton(
-                  onPressed: () {
-                    
-                    context.read<TransactionBloc>().add(
-                      LoadTodayTransactions(isIncome: isIncome),
-                    );
-                  },
-                  icon: const Icon(
-                    Icons.refresh,
-                    color: Color(0xFF1D1B20),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
 
@@ -177,6 +187,7 @@ class TransactionsView extends StatelessWidget {
                                 ),
                               )
                             : ListView.builder(
+                                padding: EdgeInsets.zero,
                                 itemCount: state.transactions.length,
                                 itemBuilder: (context, index) {
                                   return TransactionTile(
@@ -187,7 +198,6 @@ class TransactionsView extends StatelessWidget {
                                 },
                               )
                       ),
-                      
                     ],
                   );
                 }
@@ -199,12 +209,11 @@ class TransactionsView extends StatelessWidget {
           ),
         ],
       ),
-
       // Floating Action Button
       floatingActionButton: FloatingActionButton(
+        heroTag: buttonTag,
         shape: const CircleBorder(),
         onPressed: () {
-          // TODO: Навигация к экрану добавления транзакции
         },
         backgroundColor: const Color(0xFFb2AE881),
         child: const Icon(

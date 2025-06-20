@@ -12,6 +12,8 @@ class IncomesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TransactionsScreen(isIncome: true, repository: repository);
+    return TransactionsScreen(isIncome: true, 
+    repository: repository, 
+    buttonTag: 'incomesButtonTag',);
   }
 }
