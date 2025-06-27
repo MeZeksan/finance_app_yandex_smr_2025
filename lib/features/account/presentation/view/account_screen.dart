@@ -2,15 +2,16 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:auto_route/annotations.dart';
+import 'package:finance_app_yandex_smr_2025/features/account/data/models/account_update_request/account_update_request.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/data/repositoryI/mock_bank_account_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/presentation/bloc/account_bloc.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/presentation/bloc/account_event.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/presentation/bloc/account_state.dart';
+import 'package:finance_app_yandex_smr_2025/features/account/presentation/widgets/noise_box.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:sensors_plus/sensors_plus.dart';
-import 'package:finance_app_yandex_smr_2025/features/account/presentation/widgets/noise_box.dart';
 
 @RoutePage()
 class AccountScreen extends StatelessWidget {
@@ -99,6 +100,85 @@ class _AccountViewState extends State<AccountView> with SingleTickerProviderStat
       }
     });
   }
+  
+  void _showEditDialog(BuildContext context, AccountState state) {
+    final account = state.account;
+    if (account == null) return;
+    
+    final TextEditingController nameController = TextEditingController(text: account.name);
+    final TextEditingController currencyController = TextEditingController(text: account.currency);
+    
+    // Сохраняем ссылку на внешний контекст, содержащий BlocProvider
+    final outerContext = context;
+    
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Редактирование счета'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Название счета',
+                ),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: currencyController.text,
+                decoration: const InputDecoration(
+                  labelText: 'Валюта',
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'RUB', child: Text('₽')),
+                  DropdownMenuItem(value: 'USD', child: Text('\$')),
+                  DropdownMenuItem(value: 'EUR', child: Text('€')),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    currencyController.text = value;
+                  }
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+              child: const Text('Отмена'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                
+                // Используем outerContext для доступа к BlocProvider
+                if (nameController.text.isNotEmpty && currencyController.text.isNotEmpty) {
+                  final updateRequest = AccountUpdateRequest(
+                    name: nameController.text,
+                    balance: account.balance,
+                    currency: currencyController.text,
+                  );
+                  
+                  // Используем внешний контекст для доступа к BlocProvider
+                  outerContext.read<AccountBloc>().add(
+                    UpdateAccount(
+                      accountId: account.id,
+                      request: updateRequest,
+                    ),
+                  );
+                }
+              },
+              child: const Text('Сохранить'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -174,9 +254,9 @@ class _AccountViewState extends State<AccountView> with SingleTickerProviderStat
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      const Text(
-                        'Мой счет',
-                        style: TextStyle(
+                      Text(
+                        account.name,
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w400,
                           color: Color(0xFF1D1B20),
@@ -186,7 +266,7 @@ class _AccountViewState extends State<AccountView> with SingleTickerProviderStat
                         right: 0,
                         child: IconButton(
                           onPressed: () {
-                            // TODO: Implement edit functionality
+                            _showEditDialog(context, state);
                           },
                           icon: const Icon(
                             Icons.edit,
@@ -234,7 +314,7 @@ class _AccountViewState extends State<AccountView> with SingleTickerProviderStat
                                         builder: (context, child) {
                                           return _isBalanceVisible
                                             ? Text(
-                                                '$formattedBalance ${account.currency}',
+                                                '$formattedBalance ${_getCurrencySymbol(account.currency)}',
                                                 style: const TextStyle(
                                                   color: Color(0xFF1D1B20),
                                                   fontSize: 18,
@@ -284,7 +364,7 @@ class _AccountViewState extends State<AccountView> with SingleTickerProviderStat
                                 ),
                                 const Spacer(),
                                 Text(
-                                  account.currency,
+                                  _getCurrencySymbol(account.currency),
                                   style: const TextStyle(
                                     color: Color(0xFF1D1B20),
                                     fontSize: 18,
@@ -349,5 +429,18 @@ class _AccountViewState extends State<AccountView> with SingleTickerProviderStat
         ),
       ),
     );
+  }
+  
+  String _getCurrencySymbol(String currencyCode) {
+    switch (currencyCode) {
+      case 'RUB':
+        return '₽';
+      case 'USD':
+        return '\$';
+      case 'EUR':
+        return '€';
+      default:
+        return currencyCode;
+    }
   }
 }
