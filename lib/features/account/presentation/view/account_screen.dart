@@ -1,6 +1,11 @@
 import 'package:auto_route/annotations.dart';
+import 'package:finance_app_yandex_smr_2025/features/account/data/repositoryI/mock_bank_account_repository.dart';
+import 'package:finance_app_yandex_smr_2025/features/account/presentation/bloc/account_bloc.dart';
+import 'package:finance_app_yandex_smr_2025/features/account/presentation/bloc/account_event.dart';
+import 'package:finance_app_yandex_smr_2025/features/account/presentation/bloc/account_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 @RoutePage()
 class AccountScreen extends StatelessWidget {
@@ -8,7 +13,12 @@ class AccountScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const AccountView();
+    return BlocProvider(
+      create: (context) => AccountBloc(
+        repository: MockBankAccountRepository(),
+      )..add(const LoadAccount(accountId: 1)),
+      child: const AccountView(),
+    );
   }
 }
 
@@ -22,153 +32,208 @@ class AccountView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFFEF7FF),
-      body: Column(
-        children: [
-          // Header
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              color: Color(0xFFb2AE881),
-            ),
-            child: Padding(
-              padding: EdgeInsets.only(top: topPadding),
-              child: Stack(
-                alignment: Alignment.center,
+      body: BlocBuilder<AccountBloc, AccountState>(
+        builder: (context, state) {
+          if (state.isLoading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          if (state.isFailure) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    'Мой счет',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xFF1D1B20),
-                    ),
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.red[400],
                   ),
-                  Positioned(
-                    right: 0,
-                    child: IconButton(
-                      onPressed: () {
-                        // TODO: Implement edit functionality
-                      },
-                      icon: const Icon(
-                        Icons.edit,
-                        color: Color(0xFF1D1B20),
-                      ),
+                  const SizedBox(height: 16),
+                  Text(
+                    state.errorMessage ?? 'Произошла ошибка',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.red[600],
                     ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      context.read<AccountBloc>().add(
+                        const LoadAccount(accountId: 1),
+                      );
+                    },
+                    child: const Text('Повторить'),
                   ),
                 ],
               ),
-            ),
-          ),
+            );
+          }
 
-          // Content
-          Expanded(
-            child: Column(
-              children: [
-                // Balance Container
-                Container(
-                  width: double.infinity,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFD4FAE6),
-                  ),
-                  child: Column(
+          final account = state.account;
+          if (account == null) {
+            return const Center(
+              child: Text('Счет не найден'),
+            );
+          }
+
+          final formatter = NumberFormat('#,##0.00');
+          final formattedBalance = formatter.format(
+            double.tryParse(account.balance) ?? 0,
+          );
+
+          return Column(
+            children: [
+              // Header
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFb2AE881),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.only(top: topPadding),
+                  child: Stack(
+                    alignment: Alignment.center,
                     children: [
-                      // Balance Container
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            const Text(
-                              'Баланс',
-                              style: TextStyle(
-                                color: Color(0xFF1D1B20),
-                                fontSize: 16,
-                              ),
-                            ),
-                            const Spacer(),
-                            Text(
-                              '-670 000 ₽',
-                              style: const TextStyle(
-                                color: Color(0xFF1D1B20),
-                                fontSize: 18,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            const Icon(
-                              Icons.chevron_right,
-                              color: Color(0xFF1D1B20),
-                              size: 24,
-                            ),
-                          ],
+                      const Text(
+                        'Мой счет',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w400,
+                          color: Color(0xFF1D1B20),
                         ),
                       ),
-                      const Divider(
-                        height: 1,
-                        thickness: 1,
-                        color: Color(0xFFE6E6E6),
-                      ),
-                      // Currency Container
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            const Text(
-                              'Валюта',
-                              style: TextStyle(
-                                color: Color(0xFF1D1B20),
-                                fontSize: 16,
-                              ),
-                            ),
-                            const Spacer(),
-                            Text(
-                              '₽',
-                              style: const TextStyle(
-                                color: Color(0xFF1D1B20),
-                                fontSize: 18,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            const Icon(
-                              Icons.chevron_right,
-                              color: Color(0xFF1D1B20),
-                              size: 24,
-                            ),
-                          ],
+                      Positioned(
+                        right: 0,
+                        child: IconButton(
+                          onPressed: () {
+                            // TODO: Implement edit functionality
+                          },
+                          icon: const Icon(
+                            Icons.edit,
+                            color: Color(0xFF1D1B20),
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
+              ),
 
-                // Placeholder for graph
-                Expanded(
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.show_chart,
-                          size: 64,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'График будет добавлен позже',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey[600],
+              // Content
+              Expanded(
+                child: Column(
+                  children: [
+                    // Balance Container
+                    Container(
+                      width: double.infinity,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFD4FAE6),
+                      ),
+                      child: Column(
+                        children: [
+                          // Balance Container
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              children: [
+                                const Text(
+                                  'Баланс',
+                                  style: TextStyle(
+                                    color: Color(0xFF1D1B20),
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Text(
+                                  '$formattedBalance ${account.currency}',
+                                  style: const TextStyle(
+                                    color: Color(0xFF1D1B20),
+                                    fontSize: 18,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                const Icon(
+                                  Icons.chevron_right,
+                                  color: Color(0xFF1D1B20),
+                                  size: 24,
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                          const Divider(
+                            height: 1,
+                            thickness: 1,
+                            color: Color(0xFFE6E6E6),
+                          ),
+                          // Currency Container
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              children: [
+                                const Text(
+                                  'Валюта',
+                                  style: TextStyle(
+                                    color: Color(0xFF1D1B20),
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Text(
+                                  account.currency,
+                                  style: const TextStyle(
+                                    color: Color(0xFF1D1B20),
+                                    fontSize: 18,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                const Icon(
+                                  Icons.chevron_right,
+                                  color: Color(0xFF1D1B20),
+                                  size: 24,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+
+                    // Placeholder for graph
+                    Expanded(
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.show_chart,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'График будет добавлен позже',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-        ],
+              ),
+            ],
+          );
+        },
       ),
       // Floating Action Button
       floatingActionButton: FloatingActionButton(
