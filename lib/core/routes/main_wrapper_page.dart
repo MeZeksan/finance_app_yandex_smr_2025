@@ -10,12 +10,12 @@ class MainWrapperPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AutoTabsScaffold(
-      routes: const [
+      routes: [
         ExpensesRoute(),
         IncomesRoute(),
-        AccountRoute(),
-        ArticlesRoute(),
-        SettingsRoute(),
+        const AccountRoute(),
+        const ArticlesRoute(),
+        const SettingsRoute(),
       ],
       bottomNavigationBuilder: (_, tabsRouter) {
         return BottomNavigationBar(
