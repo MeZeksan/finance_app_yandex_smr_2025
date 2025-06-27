@@ -1,18 +1,21 @@
 import 'package:auto_route/annotations.dart';
-import 'package:finance_app_yandex_smr_2025/features/history/presentation/bloc/history_bloc.dart';
-import 'package:finance_app_yandex_smr_2025/features/history/presentation/widgets/widgets.dart';
+import 'package:finance_app_yandex_smr_2025/features/analysis/presentation/bloc/analysis_bloc.dart';
+import 'package:finance_app_yandex_smr_2025/features/analysis/presentation/bloc/analysis_event.dart';
+import 'package:finance_app_yandex_smr_2025/features/analysis/presentation/bloc/analysis_state.dart';
+import 'package:finance_app_yandex_smr_2025/features/analysis/presentation/view/category_transactions_screen.dart';
+import 'package:finance_app_yandex_smr_2025/features/analysis/presentation/widgets/widgets.dart';
 import 'package:finance_app_yandex_smr_2025/features/transaction/data/repositoryI/mock_transaction_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/transaction/domain/repository/transaction_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
-
 @RoutePage()
-class HistoryScreen extends StatelessWidget {
+class AnalysisScreen extends StatelessWidget {
   final bool isIncome;
 
-  const HistoryScreen({
+  const AnalysisScreen({
     super.key,
     required this.isIncome,
   });
@@ -21,25 +24,26 @@ class HistoryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final TransactionRepository repository = MockTransactionRepository();
     return BlocProvider(
-      create: (context) => HistoryBloc(repository: repository)
-        ..add(HistoryInitialized(isIncome: isIncome)),
-      child: HistoryView(isIncome: isIncome));
+      create: (context) => AnalysisBloc(repository: repository)
+        ..add(AnalysisInitialized(isIncome: isIncome)),
+      child: AnalysisView(isIncome: isIncome),
+    );
   }
 }
 
-class HistoryView extends StatefulWidget {
+class AnalysisView extends StatefulWidget {
   final bool isIncome;
 
-  const HistoryView({
+  const AnalysisView({
     super.key,
     required this.isIncome,
   });
 
   @override
-  State<HistoryView> createState() => _HistoryViewState();
+  State<AnalysisView> createState() => _AnalysisViewState();
 }
 
-class _HistoryViewState extends State<HistoryView> {
+class _AnalysisViewState extends State<AnalysisView> {
   bool _isLocaleInitialized = false;
 
   @override
@@ -49,43 +53,27 @@ class _HistoryViewState extends State<HistoryView> {
   }
 
   Future<void> _initializeLocale() async {
-    try {
-      // Initialize date formatting for multiple locales
-      await initializeDateFormatting('ru_RU', null);
-      await initializeDateFormatting('en_US', null);
-      await initializeDateFormatting(); // Initialize default locale
-      
-      if (mounted) {
-        setState(() {
-          _isLocaleInitialized = true;
-        });
-      }
-    } catch (e) {
-      // If locale initialization fails, still allow the widget to render
-      // but with basic formatting
-      if (mounted) {
-        setState(() {
-          _isLocaleInitialized = true;
-        });
-      }
+    await initializeDateFormatting('ru_RU');
+    if (mounted) {
+      setState(() {
+        _isLocaleInitialized = true;
+      });
     }
   }
 
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
-    if (!_isLocaleInitialized) return;
-    
-    final historyBloc = context.read<HistoryBloc>();
-    final currentState = historyBloc.state;
-    
-    final DateTime now = DateTime.now().add(Duration(days: 51));
-    final DateTime targetDate = isStartDate ? currentState.startDate : currentState.endDate;
-    final DateTime initialDate = targetDate.isAfter(now) ? now : targetDate;
-    
-    final DateTime? picked = await showDatePicker(
+    final state = context.read<AnalysisBloc>().state;
+    final initialDate = isStartDate ? state.startDate : state.endDate;
+    final firstDate = DateTime(2000);
+    final lastDate = DateTime(2100);
+
+    // Используем стандартный showDatePicker с локализацией
+    final pickedDate = await showDatePicker(
       context: context,
       initialDate: initialDate,
-      firstDate: DateTime(2020),
-      lastDate: now,
+      firstDate: firstDate,
+      lastDate: lastDate,
+      locale: const Locale('ru', 'RU'),
       builder: (context, child) {
         return Theme(
           data: ThemeData.light().copyWith(
@@ -98,27 +86,23 @@ class _HistoryViewState extends State<HistoryView> {
         );
       },
     );
-    
-    if (picked != null) {
-      DateTime newStartDate = currentState.startDate;
-      DateTime newEndDate = currentState.endDate;
-      
+
+    if (pickedDate != null && mounted) {
       if (isStartDate) {
-        newStartDate = DateTime(picked.year, picked.month, picked.day);
-        if (newStartDate.isAfter(currentState.endDate)) {
-          newEndDate = newStartDate;
-        }
+        context.read<AnalysisBloc>().add(
+          AnalysisDateRangeChanged(
+            startDate: pickedDate,
+            endDate: state.endDate,
+          ),
+        );
       } else {
-        newEndDate = DateTime(picked.year, picked.month, picked.day);
-        if (newEndDate.isBefore(currentState.startDate)) {
-          newStartDate = newEndDate;
-        }
+        context.read<AnalysisBloc>().add(
+          AnalysisDateRangeChanged(
+            startDate: state.startDate,
+            endDate: pickedDate,
+          ),
+        );
       }
-      
-      historyBloc.add(HistoryDateRangeChanged(
-        startDate: newStartDate,
-        endDate: newEndDate,
-      ));
     }
   }
 
@@ -138,11 +122,11 @@ class _HistoryViewState extends State<HistoryView> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFFEF7FF),
-      body: BlocBuilder<HistoryBloc, HistoryState>(
+      body: BlocBuilder<AnalysisBloc, AnalysisState>(
         builder: (context, state) {
           return Column(
             children: [
-              HistoryHeader(topPadding: topPadding),
+              AnalysisHeader(topPadding: topPadding),
 
               Container(
                 width: double.infinity,
@@ -163,7 +147,7 @@ class _HistoryViewState extends State<HistoryView> {
                         child: Row(
                           children: [
                             const Text(
-                              'Начало',
+                              'Период: начало',
                               style: TextStyle(
                                 color: Color(0xFF1D1B20),
                                 fontSize: 16,
@@ -206,7 +190,7 @@ class _HistoryViewState extends State<HistoryView> {
                         child: Row(
                           children: [
                             const Text(
-                              'Конец',
+                              'Период: конец',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w400,
@@ -282,7 +266,7 @@ class _HistoryViewState extends State<HistoryView> {
     );
   }
 
-  Widget _buildContent(BuildContext context, HistoryState state) {
+  Widget _buildContent(BuildContext context, AnalysisState state) {
     if (state.isLoading) {
       return const Center(
         child: CircularProgressIndicator(),
@@ -311,7 +295,7 @@ class _HistoryViewState extends State<HistoryView> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                context.read<HistoryBloc>().add(const HistoryRefreshed());
+                context.read<AnalysisBloc>().add(const AnalysisRefreshed());
               },
               child: const Text('Повторить'),
             ),
@@ -348,14 +332,22 @@ class _HistoryViewState extends State<HistoryView> {
                 )
               : ListView.builder(
                   padding: EdgeInsets.zero,
-                  itemCount: state.transactions.length,
+                  itemCount: state.categories.length,
                   itemBuilder: (context, index) {
-                    final transaction = state.transactions[index];
-                    return HistoryTile(
-                      transaction: transaction,
-                      showDate: state.selectedPeriod != DatePeriod.day,
+                    final category = state.categories[index];
+                    return CategoryAnalysisTile(
+                      category: category,
                       isFirst: index == 0,
-                      isLast: index == state.transactions.length - 1,
+                      isLast: index == state.categories.length - 1,
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => CategoryTransactionsScreen(
+                              category: category,
+                            ),
+                          ),
+                        );
+                      },
                     );
                   },
                 ),
@@ -363,4 +355,4 @@ class _HistoryViewState extends State<HistoryView> {
       ],
     );
   }
-}
+} 

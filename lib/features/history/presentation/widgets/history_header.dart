@@ -1,4 +1,4 @@
-
+import 'package:finance_app_yandex_smr_2025/features/analysis/presentation/view/analysis_screen.dart';
 import 'package:finance_app_yandex_smr_2025/features/history/presentation/bloc/history_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -13,6 +13,8 @@ class HistoryHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<HistoryBloc>().state;
+    
     return Container(
     width: double.infinity,
     padding: const EdgeInsets.all(16),
@@ -24,6 +26,26 @@ class HistoryHeader extends StatelessWidget {
         child: Stack(
           alignment: Alignment.center,
           children: [
+            Positioned(
+              left: 0,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(24),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    child: const Icon(
+                      Icons.arrow_back,
+                      color: Color(0xFF1D1B20),
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ),
+            ),
             const Text(
               'Моя история',
               style: TextStyle(
@@ -39,13 +61,18 @@ class HistoryHeader extends StatelessWidget {
                 child: InkWell(
                   borderRadius: BorderRadius.circular(24),
                   onTap: () {
-                    // Add refresh functionality here
-                    context.read<HistoryBloc>().add(const HistoryRefreshed());
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => AnalysisScreen(
+                          isIncome: state.isIncome,
+                        ),
+                      ),
+                    );
                   },
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     child: const Icon(
-                      Icons.refresh,
+                      Icons.analytics_outlined,
                       color: Color(0xFF1D1B20),
                       size: 24,
                     ),
