@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import 'package:finance_app_yandex_smr_2025/features/account/presentation/widgets/noise_box.dart';
 
 @RoutePage()
 class AccountScreen extends StatelessWidget {
@@ -239,13 +240,9 @@ class _AccountViewState extends State<AccountView> with SingleTickerProviderStat
                                                   fontSize: 18,
                                                 ),
                                               )
-                                            : Container(
-                                                height: 18,
+                                            : const NoiseBox(
                                                 width: 120,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.grey[300],
-                                                  borderRadius: BorderRadius.circular(4),
-                                                ),
+                                                height: 18,
                                               );
                                         },
                                       ),
