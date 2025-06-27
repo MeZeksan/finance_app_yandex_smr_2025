@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:math';
+
 import 'package:auto_route/annotations.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/data/repositoryI/mock_bank_account_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/presentation/bloc/account_bloc.dart';
@@ -6,6 +9,7 @@ import 'package:finance_app_yandex_smr_2025/features/account/presentation/bloc/a
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 
 @RoutePage()
 class AccountScreen extends StatelessWidget {
@@ -22,8 +26,78 @@ class AccountScreen extends StatelessWidget {
   }
 }
 
-class AccountView extends StatelessWidget {
+class AccountView extends StatefulWidget {
   const AccountView({super.key});
+
+  @override
+  State<AccountView> createState() => _AccountViewState();
+}
+
+class _AccountViewState extends State<AccountView> with SingleTickerProviderStateMixin {
+  bool _isBalanceVisible = true;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
+  DateTime? _lastShakeTime;
+  
+  @override
+  void initState() {
+    super.initState();
+    
+    // Инициализация анимации
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    
+    _fadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+    
+    // Подписка на события акселерометра
+    _startListeningAccelerometer();
+  }
+  
+  @override
+  void dispose() {
+    _accelerometerSubscription?.cancel();
+    _animationController.dispose();
+    super.dispose();
+  }
+  
+  void _startListeningAccelerometer() {
+    _accelerometerSubscription = accelerometerEvents.listen((AccelerometerEvent event) {
+      // Определяем переворот устройства (z < -9.0 означает, что устройство перевернуто экраном вниз)
+      if (event.z < -9.0) {
+        _toggleBalanceVisibility();
+        return;
+      }
+      
+      // Определяем тряску устройства
+      final double acceleration = sqrt(event.x * event.x + event.y * event.y + event.z * event.z);
+      final double delta = acceleration - 9.8; // Вычитаем гравитацию
+      
+      // Если ускорение больше порогового значения, считаем это тряской
+      if (delta.abs() > 10.0) {
+        final now = DateTime.now();
+        if (_lastShakeTime == null || now.difference(_lastShakeTime!) > const Duration(milliseconds: 500)) {
+          _lastShakeTime = now;
+          _toggleBalanceVisibility();
+        }
+      }
+    });
+  }
+  
+  void _toggleBalanceVisibility() {
+    setState(() {
+      _isBalanceVisible = !_isBalanceVisible;
+      if (_isBalanceVisible) {
+        _animationController.reverse();
+      } else {
+        _animationController.forward();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -150,11 +224,38 @@ class AccountView extends StatelessWidget {
                                   ),
                                 ),
                                 const Spacer(),
-                                Text(
-                                  '$formattedBalance ${account.currency}',
-                                  style: const TextStyle(
-                                    color: Color(0xFF1D1B20),
-                                    fontSize: 18,
+                                GestureDetector(
+                                  onTap: _toggleBalanceVisibility,
+                                  child: Row(
+                                    children: [
+                                      AnimatedBuilder(
+                                        animation: _fadeAnimation,
+                                        builder: (context, child) {
+                                          return _isBalanceVisible
+                                            ? Text(
+                                                '$formattedBalance ${account.currency}',
+                                                style: const TextStyle(
+                                                  color: Color(0xFF1D1B20),
+                                                  fontSize: 18,
+                                                ),
+                                              )
+                                            : Container(
+                                                height: 18,
+                                                width: 120,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.grey[300],
+                                                  borderRadius: BorderRadius.circular(4),
+                                                ),
+                                              );
+                                        },
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Icon(
+                                        _isBalanceVisible ? Icons.visibility : Icons.visibility_off,
+                                        color: const Color(0xFF1D1B20),
+                                        size: 20,
+                                      ),
+                                    ],
                                   ),
                                 ),
                                 const SizedBox(width: 4),
@@ -224,6 +325,8 @@ class AccountView extends StatelessWidget {
                                 color: Colors.grey[600],
                               ),
                             ),
+                            const SizedBox(height: 24),
+                            
                           ],
                         ),
                       ),
