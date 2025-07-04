@@ -330,26 +330,40 @@ class _AnalysisViewState extends State<AnalysisView> {
                     ],
                   ),
                 )
-              : ListView.builder(
-                  padding: EdgeInsets.zero,
-                  itemCount: state.categories.length,
-                  itemBuilder: (context, index) {
-                    final category = state.categories[index];
-                    return CategoryAnalysisTile(
-                      category: category,
-                      isFirst: index == 0,
-                      isLast: index == state.categories.length - 1,
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => CategoryTransactionsScreen(
-                              category: category,
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
+              : SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      CategoryPieChart(
+                        categories: state.categories,
+                        totalAmount: state.totalAmount,
+                        animate: true,
+                        key: ValueKey('${state.startDate.toIso8601String()}_${state.endDate.toIso8601String()}_${state.isIncome}'),
+                      ),
+                      ListView.builder(
+                        padding: EdgeInsets.zero,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: state.categories.length,
+                        itemBuilder: (context, index) {
+                          final category = state.categories[index];
+                          return CategoryAnalysisTile(
+                            category: category,
+                            isFirst: index == 0,
+                            isLast: index == state.categories.length - 1,
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => CategoryTransactionsScreen(
+                                    category: category,
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
         ),
       ],
