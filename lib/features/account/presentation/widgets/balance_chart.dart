@@ -95,7 +95,7 @@ class BalanceChart extends StatelessWidget {
           barGroups: data.asMap().entries.map((entry) {
             final idx = entry.key;
             final d = entry.value;
-            final barColor = d.type == 'income' ? const Color(0xFF19E28A) : const Color(0xFFFF6600);
+            final barColor = d.type == 'income' ? const Color(0xFFb2AE881) : const Color(0xffFF5F00);
             return BarChartGroupData(
               x: idx,
               barRods: [

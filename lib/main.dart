@@ -17,20 +17,21 @@ void main() async {
   // Инициализируем локализацию для корректного отображения дат
   await initializeDateFormatting('ru_RU', null);
   
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({super.key});
-
-  final _appRouter = AppRouter();
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final _appRouter = AppRouter();
+
     return MaterialApp.router(
       title: 'Finance App',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
       routerConfig: _appRouter.config(),
@@ -41,9 +42,7 @@ class MyApp extends StatelessWidget {
       ],
       supportedLocales: const [
         Locale('ru', 'RU'),
-        Locale('en', 'US'),
       ],
-      locale: const Locale('ru', 'RU'),
     );
   }
 }

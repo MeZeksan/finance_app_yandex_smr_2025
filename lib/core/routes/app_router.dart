@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:finance_app_yandex_smr_2025/core/routes/main_wrapper_page.dart';
+import 'package:finance_app_yandex_smr_2025/core/splash/splash_screen.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/presentation/view/account_screen.dart';
 import 'package:finance_app_yandex_smr_2025/features/analysis/presentation/view/analysis_screen.dart';
 import 'package:finance_app_yandex_smr_2025/features/articles/presentation/view/articles_screen.dart';
@@ -13,43 +14,47 @@ part 'app_router.gr.dart';
 
 @AutoRouterConfig()
 class AppRouter extends RootStackRouter {
+  AppRouter() : super();
+
   @override
   List<AutoRoute> get routes => [
-        // Главный wrapper route с AutoTabsScaffold
+        AutoRoute(
+          page: SplashRoute.page,
+          initial: true,
+        ),
         AutoRoute(
           page: MainWrapperRoute.page,
-          path: '/',
+          path: '/main',
           children: [
-            AutoRoute(
-              page: ExpensesRoute.page,
-              path: 'expenses',
-            ),
-            AutoRoute(
-              page: IncomesRoute.page,
-              path: 'income',
-            ),
             AutoRoute(
               page: AccountRoute.page,
               path: 'account',
-              initial: true,
+            ),
+            AutoRoute(
+              page: AnalysisRoute.page,
+              path: 'analysis',
             ),
             AutoRoute(
               page: ArticlesRoute.page,
               path: 'articles',
             ),
             AutoRoute(
+              page: HistoryRoute.page,
+              path: 'history',
+            ),
+            AutoRoute(
               page: SettingsRoute.page,
               path: 'settings',
             ),
+            AutoRoute(
+              page: ExpensesRoute.page,
+              path: 'expenses',
+            ),
+            AutoRoute(
+              page: IncomesRoute.page,
+              path: 'incomes',
+            ),
           ],
-        ),
-        AutoRoute(
-          page: HistoryRoute.page,
-          path: '/history',
-        ),
-        AutoRoute(
-          page: AnalysisRoute.page,
-          path: '/analysis',
         ),
       ];
 }
