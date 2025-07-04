@@ -10,191 +10,140 @@ class MockTransactionRepository implements TransactionRepository {
   final Map<int, TransactionResponce> _transactions = {};
   int _nextId = 1;
 
+  // Список категорий расходов с эмодзи
+  final List<(String, String)> _expenseCategories = [
+    ('Комикс-шоп', '📚'),
+    ('Зоомагазин', '🐾'),
+    ('Кофейня', '☕'),
+    ('Кинотеатр', '🎬'),
+    ('Книжный', '📖'),
+    ('Игровой магазин', '🎮'),
+    ('Пиццерия', '🍕'),
+    ('Суши-бар', '🍱'),
+    ('Спортзал', '🏋️'),
+    ('Магазин музыки', '🎵'),
+  ];
+
+  // Список категорий доходов с эмодзи
+  final List<(String, String)> _incomeCategories = [
+    ('Зарплата', '💰'),
+    ('Фриланс', '💻'),
+    ('Инвестиции', '📈'),
+    ('Подработка', '💼'),
+  ];
+
   MockTransactionRepository() {
     _initializeWithMockData();
   }
 
   void _initializeWithMockData() {
     final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
+    final lastDayOfMonth = DateTime(now.year, now.month + 1, 0).day;
+    var currentBalance = 1000000.0; // Начальный баланс
     
-    // Доходы за сегодня
-    _transactions[1] = TransactionResponce(
-      id: 1,
-      account: AccountBrief(
-        id: 1,
-        name: 'Основной счет',
-        balance: '524334',
-        currency: 'RUB',
-      ),
-      category: Category(id: 1, name: 'Зарплата', emoji: '💰', isIncome: true),
-      amount: '500000.00',
-      transactionDate: today.add(const Duration(hours: 9)),
-      comment: 'Зарплата за месяц',
-      createdAt: today.add(const Duration(hours: 9)),
-      updatedAt: today.add(const Duration(hours: 9)),
-    );
-
-    _transactions[2] = TransactionResponce(
-      id: 2,
-      account: AccountBrief(
-        id: 1,
-        name: 'Основной счет',
-        currency: 'RUB',
-        balance: '624334',
-      ),
-      category: Category(id: 2, name: 'Подработка', emoji: '💼', isIncome: true),
-      amount: '100000.00',
-      transactionDate: today.add(const Duration(hours: 15)),
-      comment: 'Фриланс проект',
-      createdAt: today.add(const Duration(hours: 15)),
-      updatedAt: today.add(const Duration(hours: 15)),
-    );
-
-    // Расходы за сегодня
-    _transactions[3] = TransactionResponce(
-      id: 3,
-      account: AccountBrief(
-        id: 1,
-        name: 'Основной счет',
-        currency: 'RUB',
-        balance: '524334',
-      ),
-      category: Category(id: 3, name: 'Аренда квартиры', emoji: '🏠', isIncome: false),
-      amount: '100000.00',
-      transactionDate: today.add(const Duration(hours: 10)),
-      comment: null,
-      createdAt: today.add(const Duration(hours: 10)),
-      updatedAt: today.add(const Duration(hours: 10)),
-    );
-
-    _transactions[4] = TransactionResponce(
-      id: 4,
-      account: AccountBrief(
-        id: 1,
-        name: 'Основной счет',
-        currency: 'RUB',
-        balance: '424334',
-      ),
-      category: Category(id: 4, name: 'Одежда', emoji: '👕', isIncome: false),
-      amount: '100000.00',
-      transactionDate: today.add(const Duration(hours: 12)),
-      comment: null,
-      createdAt: today.add(const Duration(hours: 12)),
-      updatedAt: today.add(const Duration(hours: 12)),
-    );
-
-    _transactions[5] = TransactionResponce(
-      id: 5,
-      account: AccountBrief(
-        id: 1,
-        name: 'Основной счет',
-        currency: 'RUB',
-        balance: '324334',
-      ),
-      category: Category(id: 5, name: 'На собачку', emoji: '🐕', isIncome: false),
-      amount: '100000.00',
-      transactionDate: today.add(const Duration(hours: 14)),
-      comment: 'Джек',
-      createdAt: today.add(const Duration(hours: 14)),
-      updatedAt: today.add(const Duration(hours: 14)),
-    );
-
-    _transactions[6] = TransactionResponce(
-      id: 6,
-      account: AccountBrief(
-        id: 1,
-        name: 'Основной счет',
-        currency: 'RUB',
-        balance: '224334',
-      ),
-      category: Category(id: 6, name: 'На собачку', emoji: '🐕', isIncome: false),
-      amount: '100000.00',
-      transactionDate: today.add(const Duration(hours: 16)),
-      comment: 'Энни',
-      createdAt: today.add(const Duration(hours: 16)),
-      updatedAt: today.add(const Duration(hours: 16)),
-    );
-
-    _transactions[7] = TransactionResponce(
-      id: 7,
-      account: AccountBrief(
-        id: 1,
-        name: 'Основной счет',
-        currency: 'RUB',
-        balance: '124334',
-      ),
-      category: Category(id: 7, name: 'Ремонт квартиры', emoji: '🔨', isIncome: false),
-      amount: '100000.00',
-      transactionDate: today.add(const Duration(hours: 18)),
-      comment: null,
-      createdAt: today.add(const Duration(hours: 18)),
-      updatedAt: today.add(const Duration(hours: 18)),
-    );
-
-    _transactions[8] = TransactionResponce(
-      id: 8,
-      account: AccountBrief(
-        id: 1,
-        name: 'Основной счет',
-        currency: 'RUB',
-        balance: '24334',
-      ),
-      category: Category(id: 8, name: 'Продукты', emoji: '🛒', isIncome: false),
-      amount: '100000.00',
-      transactionDate: today.add(const Duration(hours: 19)),
-      comment: null,
-      createdAt: today.add(const Duration(hours: 19)),
-      updatedAt: today.add(const Duration(hours: 19)),
-    );
-
-    _transactions[9] = TransactionResponce(
-      id: 9,
-      account: AccountBrief(
-        id: 1,
-        name: 'Основной счет',
-        currency: 'RUB',
-        balance: '0',
-      ),
-      category: Category(id: 9, name: 'Спортзал', emoji: '🏋️', isIncome: false),
-      amount: '100000.00',
-      transactionDate: today.add(const Duration(hours: 20)),
-      comment: null,
-      createdAt: today.add(const Duration(hours: 20)),
-      updatedAt: today.add(const Duration(hours: 20)),
-    );
-
-    _transactions[10] = TransactionResponce(
-      id: 10,
-      account: AccountBrief(
-        id: 1,
-        name: 'Основной счет',
-        currency: 'RUB',
-        balance: '0',
-      ),
-      category: Category(id: 10, name: 'Медицина', emoji: '💊', isIncome: false),
-      amount: '100000.00',
-      transactionDate: today.add(const Duration(hours: 21)),
-      comment: null,
-      createdAt: today.add(const Duration(hours: 21)),
-      updatedAt: today.add(const Duration(hours: 21)),
-    );
-
-    _transactions[11] = TransactionResponce(
-      id: 11,
-      account: AccountBrief(
-        id: 1,
-        name: 'Основной счет',
-        currency: 'RUB',
-        balance: '0',
-      ),
-      category: Category(id: 11, name: 'Праздник', emoji: '🎂', isIncome: false),
-      amount: '200000.00',
-      transactionDate: today.add(const Duration(hours: 36)),
-      comment: null,
-      createdAt: today.add(const Duration(hours: 36)),
-      updatedAt: today.add(const Duration(hours: 36)),
-    );
+    // Генерируем транзакции за весь месяц
+    for (int day = 1; day <= lastDayOfMonth; day++) {
+      final date = DateTime(now.year, now.month, day);
+      final isIncome = day % 6 == 0 || day % 9 == 0; // Те же условия, что и в BalanceData
+      
+      // Генерируем сумму транзакции
+      final base = isIncome ? 35000.0 : 12000.0;
+      final variation = isIncome ? 20000.0 : 15000.0;
+      final mod = (day % 8) - 4;
+      final amount = base + variation * mod.abs() / 4;
+      
+      // Выбираем случайную категорию из соответствующего списка
+      final categoryIndex = day % (isIncome ? _incomeCategories.length : _expenseCategories.length);
+      final (categoryName, categoryEmoji) = isIncome 
+          ? _incomeCategories[categoryIndex]
+          : _expenseCategories[categoryIndex];
+      
+      // Создаем категорию
+      final category = Category(
+        id: _nextId,
+        name: categoryName,
+        emoji: categoryEmoji,
+        isIncome: isIncome,
+      );
+      
+      // Обновляем баланс
+      if (isIncome) {
+        currentBalance += amount;
+      } else {
+        currentBalance -= amount;
+      }
+      
+      // Создаем комментарий в зависимости от категории
+      String? comment;
+      if (!isIncome) {
+        switch (categoryName) {
+          case 'Комикс-шоп':
+            comment = 'Новый выпуск Человека-паука';
+            break;
+          case 'Зоомагазин':
+            comment = 'Корм и игрушки для питомца';
+            break;
+          case 'Кофейня':
+            comment = 'Латте и круассан';
+            break;
+          case 'Кинотеатр':
+            comment = 'Билеты на премьеру';
+            break;
+          case 'Книжный':
+            comment = 'Новинки фантастики';
+            break;
+          case 'Игровой магазин':
+            comment = 'Предзаказ новой игры';
+            break;
+          case 'Пиццерия':
+            comment = 'Пицца с друзьями';
+            break;
+          case 'Суши-бар':
+            comment = 'Роллы на ужин';
+            break;
+          case 'Спортзал':
+            comment = 'Месячный абонемент';
+            break;
+          case 'Магазин музыки':
+            comment = 'Виниловые пластинки';
+            break;
+        }
+      } else {
+        switch (categoryName) {
+          case 'Зарплата':
+            comment = 'Ежемесячная зарплата';
+            break;
+          case 'Фриланс':
+            comment = 'Завершение проекта';
+            break;
+          case 'Инвестиции':
+            comment = 'Дивиденды';
+            break;
+          case 'Подработка':
+            comment = 'Дополнительная работа';
+            break;
+        }
+      }
+      
+      // Создаем транзакцию
+      _transactions[_nextId] = TransactionResponce(
+        id: _nextId,
+        account: AccountBrief(
+          id: 1,
+          name: 'Основной счет',
+          balance: currentBalance.toStringAsFixed(2),
+          currency: 'RUB',
+        ),
+        category: category,
+        amount: amount.toStringAsFixed(2),
+        transactionDate: date.add(Duration(hours: 9 + day % 12)), // Разное время в течение дня
+        comment: comment,
+        createdAt: date,
+        updatedAt: date,
+      );
+      
+      _nextId++;
+    }
   }
 
   @override
@@ -203,7 +152,6 @@ class MockTransactionRepository implements TransactionRepository {
     return _transactions[transactionId];
   }
 
-  // Новый метод для получения всех транзакций
   Future<List<TransactionResponce>> getAllTransactions() async {
     await Future.delayed(const Duration(milliseconds: 500));
     return _transactions.values.toList();
@@ -214,7 +162,6 @@ class MockTransactionRepository implements TransactionRepository {
     required DateTime dateTo,
     required bool isIncome,
   }) async {
-    // Ваша существующая реализация уже корректна
     await Future.delayed(const Duration(milliseconds: 500));
     
     return _transactions.values.where((transaction) {
@@ -236,7 +183,7 @@ class MockTransactionRepository implements TransactionRepository {
           id: request.accountId,
           name: 'Счет ${request.accountId}',
           currency: 'RUB',
-          balance: '00.00'),
+          balance: '0.00'),
       category: Category(
           id: request.categoryId,
           name: 'Категория ${request.categoryId}',
@@ -270,12 +217,12 @@ class MockTransactionRepository implements TransactionRepository {
           id: request.accountId,
           name: 'Счет ${request.accountId}',
           currency: 'RUB',
-          balance: '23560.00'),
+          balance: existingTransaction.account.balance),
       category: Category(
           id: request.categoryId,
           name: 'Категория ${request.categoryId}',
           emoji: '📊',
-          isIncome: false),
+          isIncome: existingTransaction.category.isIncome),
       amount: request.amount,
       transactionDate: request.transactionDate,
       comment: request.comment,
@@ -289,7 +236,6 @@ class MockTransactionRepository implements TransactionRepository {
   @override
   Future<bool> deleteTransaction(int transactionId) async {
     await Future.delayed(const Duration(milliseconds: 300));
-
     final removed = _transactions.remove(transactionId);
     return removed != null;
   }
