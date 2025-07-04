@@ -386,7 +386,8 @@ class _AccountViewState extends State<AccountView> with SingleTickerProviderStat
                     ),
 
                     // Balance Chart
-                    Expanded(
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.35,
                       child: BalanceChart(
                         balanceData: MockBalanceData.getMockDataExtended(),
                       ),

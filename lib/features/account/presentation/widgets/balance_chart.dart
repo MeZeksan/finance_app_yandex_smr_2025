@@ -9,12 +9,11 @@ class BalanceChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = const Color(0xFFF7F2FA);
     final data = balanceData;
     
     if (data.isEmpty) {
       return Container(
-        color: bgColor,
+        color: Colors.transparent,
         child: const Center(
           child: Text(
             'Нет данных для отображения',
@@ -25,7 +24,7 @@ class BalanceChart extends StatelessWidget {
     }
 
     return Container(
-      color: bgColor,
+      color: Colors.transparent,
       padding: const EdgeInsets.all(16),
       child: BarChart(
         BarChartData(
@@ -105,8 +104,8 @@ class BalanceChart extends StatelessWidget {
                   color: barColor,
                   width: 6,
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(6),
-                    topRight: Radius.circular(6),
+                    topLeft: Radius.circular(92),
+                    topRight: Radius.circular(92),
                   ),
                 ),
               ],
