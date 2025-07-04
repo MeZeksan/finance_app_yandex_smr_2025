@@ -7,8 +7,12 @@ import 'package:finance_app_yandex_smr_2025/features/transaction/data/models/tra
 import 'package:finance_app_yandex_smr_2025/features/transaction/domain/repository/transaction_repository.dart';
 
 class MockTransactionRepository implements TransactionRepository {
+  static final MockTransactionRepository _instance = MockTransactionRepository._internal();
+  static MockTransactionRepository get instance => _instance;
+  
   final Map<int, TransactionResponce> _transactions = {};
   int _nextId = 1;
+  double _currentBalance = 0.0;
 
   // Список категорий расходов с эмодзи
   final List<(String, String)> _expenseCategories = [
@@ -32,14 +36,67 @@ class MockTransactionRepository implements TransactionRepository {
     ('Подработка', '💼'),
   ];
 
-  MockTransactionRepository() {
+  MockTransactionRepository._internal() {
     _initializeWithMockData();
+  }
+  
+  factory MockTransactionRepository() => _instance;
+
+  // Находим категорию по ID, возвращаем (name, emoji, isIncome)
+  (String, String, bool)? _findCategoryById(int categoryId) {
+    // Проверяем категории доходов
+    for (int i = 0; i < _incomeCategories.length; i++) {
+      if (categoryId == i + 1) { // ID начинаются с 1
+        return (_incomeCategories[i].$1, _incomeCategories[i].$2, true);
+      }
+    }
+    
+    // Проверяем категории расходов
+    for (int i = 0; i < _expenseCategories.length; i++) {
+      if (categoryId == i + 5) { // ID расходов начинаются с 5
+        return (_expenseCategories[i].$1, _expenseCategories[i].$2, false);
+      }
+    }
+    
+    return null;
+  }
+
+  void _updateBalance(double amount, bool isIncome, {bool isAdding = true}) {
+    if (isAdding) {
+      // Добавляем транзакцию
+      if (isIncome) {
+        _currentBalance += amount;
+      } else {
+        _currentBalance -= amount;
+      }
+    } else {
+      // Удаляем транзакцию
+      if (isIncome) {
+        _currentBalance -= amount;
+      } else {
+        _currentBalance += amount;
+      }
+    }
+  }
+
+  void _updateAllAccountBalances() {
+    // Обновляем баланс во всех транзакциях
+    for (final transaction in _transactions.values) {
+      final updatedAccount = AccountBrief(
+        id: transaction.account.id,
+        name: transaction.account.name,
+        balance: _currentBalance.toStringAsFixed(2),
+        currency: transaction.account.currency,
+      );
+      
+      _transactions[transaction.id] = transaction.copyWith(account: updatedAccount);
+    }
   }
 
   void _initializeWithMockData() {
     final now = DateTime.now();
     final lastDayOfMonth = DateTime(now.year, now.month + 1, 0).day;
-    var currentBalance = 0.0; // Начинаем с нулевого баланса
+    _currentBalance = 0.0; // Начинаем с нулевого баланса
     
     // Генерируем транзакции за весь месяц
     for (int day = 1; day <= lastDayOfMonth; day++) {
@@ -68,9 +125,9 @@ class MockTransactionRepository implements TransactionRepository {
       
       // Обновляем баланс (доходы добавляем, расходы вычитаем)
       if (isIncome) {
-        currentBalance += amount;
+        _currentBalance += amount;
       } else {
-        currentBalance -= amount;
+        _currentBalance -= amount;
       }
       
       // Создаем комментарий в зависимости от категории
@@ -131,7 +188,7 @@ class MockTransactionRepository implements TransactionRepository {
         account: AccountBrief(
           id: 1,
           name: 'Основной счет',
-          balance: currentBalance.toStringAsFixed(2),
+          balance: _currentBalance.toStringAsFixed(2),
           currency: 'RUB',
         ),
         category: category,
@@ -176,19 +233,31 @@ class MockTransactionRepository implements TransactionRepository {
   Future<TransactionResponce> addTransaction(TransactionRequest request) async {
     await Future.delayed(const Duration(milliseconds: 500));
 
+    // Находим реальную категорию по ID
+    final categoryData = _findCategoryById(request.categoryId);
+    if (categoryData == null) {
+      throw Exception('Category with id ${request.categoryId} not found');
+    }
+
     final now = DateTime.now();
+    // Обновляем баланс
+    final amount = double.parse(request.amount);
+    _updateBalance(amount, categoryData.$3);
+
     final newTransaction = TransactionResponce(
       id: _nextId++,
       account: AccountBrief(
-          id: request.accountId,
-          name: 'Счет ${request.accountId}',
-          currency: 'RUB',
-          balance: '0.00'),
+        id: request.accountId,
+        name: 'Основной счет',
+        currency: 'RUB',
+        balance: _currentBalance.toStringAsFixed(2),
+      ),
       category: Category(
-          id: request.categoryId,
-          name: 'Категория ${request.categoryId}',
-          emoji: '📊',
-          isIncome: true),
+        id: request.categoryId,
+        name: categoryData.$1,
+        emoji: categoryData.$2,
+        isIncome: categoryData.$3,
+      ),
       amount: request.amount,
       transactionDate: request.transactionDate,
       comment: request.comment,
@@ -197,6 +266,10 @@ class MockTransactionRepository implements TransactionRepository {
     );
 
     _transactions[newTransaction.id] = newTransaction;
+    
+    // Обновляем баланс во всех существующих транзакциях
+    _updateAllAccountBalances();
+    
     return newTransaction;
   }
 
@@ -212,17 +285,35 @@ class MockTransactionRepository implements TransactionRepository {
       throw Exception('Transaction with id $transactionId not found');
     }
 
+    // Находим реальную категорию по ID
+    final categoryData = _findCategoryById(request.categoryId);
+    if (categoryData == null) {
+      throw Exception('Category with id ${request.categoryId} not found');
+    }
+
+    // Откатываем старую транзакцию и добавляем новую
+    final oldAmount = double.parse(existingTransaction.amount);
+    final newAmount = double.parse(request.amount);
+    
+    // Откатываем старую транзакцию
+    _updateBalance(oldAmount, existingTransaction.category.isIncome, isAdding: false);
+    
+    // Добавляем новую транзакцию
+    _updateBalance(newAmount, categoryData.$3, isAdding: true);
+
     final updatedTransaction = existingTransaction.copyWith(
       account: AccountBrief(
-          id: request.accountId,
-          name: 'Счет ${request.accountId}',
-          currency: 'RUB',
-          balance: existingTransaction.account.balance),
+        id: request.accountId,
+        name: 'Основной счет',
+        currency: 'RUB',
+        balance: _currentBalance.toStringAsFixed(2),
+      ),
       category: Category(
-          id: request.categoryId,
-          name: 'Категория ${request.categoryId}',
-          emoji: '📊',
-          isIncome: existingTransaction.category.isIncome),
+        id: request.categoryId,
+        name: categoryData.$1,
+        emoji: categoryData.$2,
+        isIncome: categoryData.$3,
+      ),
       amount: request.amount,
       transactionDate: request.transactionDate,
       comment: request.comment,
@@ -230,13 +321,32 @@ class MockTransactionRepository implements TransactionRepository {
     );
 
     _transactions[transactionId] = updatedTransaction;
+    
+    // Обновляем баланс во всех транзакциях
+    _updateAllAccountBalances();
+    
     return updatedTransaction;
   }
 
   @override
   Future<bool> deleteTransaction(int transactionId) async {
     await Future.delayed(const Duration(milliseconds: 300));
-    final removed = _transactions.remove(transactionId);
-    return removed != null;
+    
+    final transaction = _transactions[transactionId];
+    if (transaction != null) {
+      // Откатываем баланс
+      final amount = double.parse(transaction.amount);
+      _updateBalance(amount, transaction.category.isIncome, isAdding: false);
+      
+      // Удаляем транзакцию
+      _transactions.remove(transactionId);
+      
+      // Обновляем баланс во всех оставшихся транзакциях
+      _updateAllAccountBalances();
+      
+      return true;
+    }
+    
+    return false;
   }
 }

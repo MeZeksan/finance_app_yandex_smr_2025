@@ -112,7 +112,7 @@ class TransactionTile extends StatelessWidget {
       MaterialPageRoute(
         builder: (context) => TransactionScreen.edit(
           transaction: transaction,
-          transactionRepository: MockTransactionRepository(),
+          transactionRepository: MockTransactionRepository.instance,
         ),
       ),
     );
@@ -145,7 +145,7 @@ class TransactionScreen extends StatefulWidget {
       MaterialPageRoute(
         builder: (context) => TransactionScreen.create(
           isIncome: isIncome,
-          transactionRepository: repository,
+          transactionRepository: MockTransactionRepository.instance,
         ),
       ),
     );
