@@ -315,36 +315,76 @@ class _TransactionScreenState extends State<TransactionScreen> {
     }
   }
 
-  Future<void> _saveTransaction() async {
+  List<String> _validateFields() {
+    final errors = <String>[];
+
+    // Проверка счета
     if (_selectedAccount == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Выберите счет')),
-      );
-      return;
+      errors.add('Выберите счет');
     }
 
-    if (_selectedCategory == null && !widget.isEditMode) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Выберите категорию')),
-      );
-      return;
+    // Проверка категории
+    if (_selectedCategory == null) {
+      errors.add('Выберите категорию');
     }
 
-    if (_amountController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Введите сумму')),
-      );
+    // Проверка суммы
+    if (_amountController.text.trim().isEmpty) {
+      errors.add('Введите сумму');
+    } else {
+      final amountText = _amountController.text.replaceAll(',', '.');
+      final amount = double.tryParse(amountText);
+      if (amount == null || amount <= 0) {
+        errors.add('Введите корректную сумму больше 0');
+      }
+    }
+
+    return errors;
+  }
+
+  void _showValidationDialog(List<String> errors) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Заполните обязательные поля'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Для сохранения операции необходимо заполнить:'),
+            const SizedBox(height: 8),
+            ...errors.map((error) => Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('• ', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Expanded(child: Text(error)),
+                ],
+              ),
+            )),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Понятно'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _saveTransaction() async {
+    // Валидация всех полей
+    final validationErrors = _validateFields();
+    if (validationErrors.isNotEmpty) {
+      _showValidationDialog(validationErrors);
       return;
     }
 
     final amountText = _amountController.text.replaceAll(',', '.');
-    final amount = double.tryParse(amountText);
-    if (amount == null || amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Введите корректную сумму')),
-      );
-      return;
-    }
+    final amount = double.tryParse(amountText)!; // Safe because validation passed
 
     setState(() {
       _isSaving = true;
@@ -511,10 +551,10 @@ class _TransactionScreenState extends State<TransactionScreen> {
                                   children: [
                                     Text(
                                       _selectedAccount?.name ?? 'Выберите счет',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w400,
-                                        color: Colors.grey,
+                                        color: _selectedAccount != null ? Colors.black : Colors.grey,
                                       ),
                                     ),
                                     const SizedBox(width: 8),
@@ -550,10 +590,10 @@ class _TransactionScreenState extends State<TransactionScreen> {
                                   children: [
                                     Text(
                                       _selectedCategory?.name ?? 'Выберите категорию',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w400,
-                                        color: Colors.grey,
+                                        color: _selectedCategory != null ? Colors.black : Colors.grey,
                                       ),
                                     ),
                                     const SizedBox(width: 8),
@@ -637,7 +677,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w400,
-                                    color: Colors.grey,
+                                    color: Colors.black,
                                   ),
                                 ),
                                 onTap: _selectDate,
@@ -669,7 +709,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w400,
-                                    color: Colors.grey,
+                                    color: Colors.black,
                                   ),
                                 ),
                                 onTap: _selectTime,
