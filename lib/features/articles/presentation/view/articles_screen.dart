@@ -147,7 +147,7 @@ class _ArticlesViewState extends State<ArticlesView> {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: state.searchMode == SearchMode.fuzzy
-                                ? Color(0xFFb2AE881).withValues(alpha: 0.2)
+                                ? Colors.blue.withValues(alpha: 0.2)
                                 : Colors.grey[300],
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -158,7 +158,7 @@ class _ArticlesViewState extends State<ArticlesView> {
                                 Icons.auto_awesome,
                                 size: 16,
                                 color: state.searchMode == SearchMode.fuzzy
-                                    ? Color(0xFFb2AE881)
+                                    ? Colors.blue
                                     : Colors.grey[700],
                               ),
                               const SizedBox(width: 4),
@@ -166,7 +166,7 @@ class _ArticlesViewState extends State<ArticlesView> {
                                 'Fuzzy',
                                 style: TextStyle(
                                   color: state.searchMode == SearchMode.fuzzy
-                                      ? Color(0xFFb2AE881)
+                                      ? Colors.blue
                                       : Colors.grey[700],
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,

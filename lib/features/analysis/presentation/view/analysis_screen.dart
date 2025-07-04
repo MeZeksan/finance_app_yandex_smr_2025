@@ -8,7 +8,7 @@ import 'package:finance_app_yandex_smr_2025/features/transaction/data/repository
 import 'package:finance_app_yandex_smr_2025/features/transaction/domain/repository/transaction_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+
 import 'package:intl/date_symbol_data_local.dart';
 
 @RoutePage()
@@ -330,8 +330,19 @@ class _AnalysisViewState extends State<AnalysisView> {
                     ],
                   ),
                 )
-              : ListView.builder(
+              : SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      CategoryPieChart(
+                        categories: state.categories,
+                        totalAmount: state.totalAmount,
+                        animate: true,
+                        key: ValueKey('${state.startDate.toIso8601String()}_${state.endDate.toIso8601String()}_${state.isIncome}'),
+                      ),
+                      ListView.builder(
                   padding: EdgeInsets.zero,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
                   itemCount: state.categories.length,
                   itemBuilder: (context, index) {
                     final category = state.categories[index];
@@ -350,6 +361,9 @@ class _AnalysisViewState extends State<AnalysisView> {
                       },
                     );
                   },
+                      ),
+                    ],
+                  ),
                 ),
         ),
       ],

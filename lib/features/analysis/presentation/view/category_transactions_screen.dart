@@ -152,6 +152,10 @@ class CategoryTransactionsScreen extends StatelessWidget {
                         showDate: true,
                         isFirst: index == 0,
                         isLast: index == category.transactions.length - 1,
+                        onChanged: () {
+                          // Pop back to refresh the analysis screen
+                          Navigator.of(context).pop();
+                        },
                       );
                     },
                   ),

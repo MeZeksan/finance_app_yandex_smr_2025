@@ -66,16 +66,16 @@ class AnalysisBloc extends Bloc<AnalysisEvent, AnalysisState> {
         return;
       }
 
-      // Группировка транзакций по категориям
+      // Группировка транзакций по названиям категорий (вместо ID)
       final Map<String, List<TransactionResponce>> categorizedTransactions = {};
       double totalAmount = 0;
 
       for (final transaction in transactions) {
-        final categoryId = transaction.category.id.toString();
-        if (!categorizedTransactions.containsKey(categoryId)) {
-          categorizedTransactions[categoryId] = [];
+        final categoryName = transaction.category.name;
+        if (!categorizedTransactions.containsKey(categoryName)) {
+          categorizedTransactions[categoryName] = [];
         }
-        categorizedTransactions[categoryId]!.add(transaction);
+        categorizedTransactions[categoryName]!.add(transaction);
         
         final amount = double.tryParse(transaction.amount) ?? 0;
         totalAmount += amount;
@@ -84,7 +84,7 @@ class AnalysisBloc extends Bloc<AnalysisEvent, AnalysisState> {
       // Создание списка анализа по категориям
       final List<CategoryAnalysis> categories = [];
       
-      categorizedTransactions.forEach((categoryId, categoryTransactions) {
+      categorizedTransactions.forEach((categoryName, categoryTransactions) {
         // Сортировка транзакций по дате (сначала новые)
         categoryTransactions.sort((a, b) => 
           b.transactionDate.compareTo(a.transactionDate));
@@ -101,8 +101,8 @@ class AnalysisBloc extends Bloc<AnalysisEvent, AnalysisState> {
         
         // Создание объекта анализа категории
         categories.add(CategoryAnalysis(
-          categoryId: categoryId,
-          categoryName: categoryTransactions.first.category.name,
+          categoryId: categoryTransactions.first.category.id.toString(),
+          categoryName: categoryName,
           emoji: categoryTransactions.first.category.emoji,
           amount: categoryAmount,
           percentage: percentage,

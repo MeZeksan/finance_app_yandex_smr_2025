@@ -12,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import '../widgets/balance_chart.dart';
+import '../../data/repositoryI/mock_balance_data.dart';
 
 @RoutePage()
 class AccountScreen extends StatelessWidget {
@@ -383,29 +385,11 @@ class _AccountViewState extends State<AccountView> with SingleTickerProviderStat
                       ),
                     ),
 
-                    // Placeholder for graph
-                    Expanded(
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.show_chart,
-                              size: 64,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'График будет добавлен позже',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            
-                          ],
-                        ),
+                    // Balance Chart
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.35,
+                      child: BalanceChart(
+                        balanceData: MockBalanceData.getMockDataExtended(),
                       ),
                     ),
                   ],

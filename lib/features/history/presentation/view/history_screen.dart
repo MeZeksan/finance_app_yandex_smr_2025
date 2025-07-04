@@ -356,6 +356,10 @@ class _HistoryViewState extends State<HistoryView> {
                       showDate: state.selectedPeriod != DatePeriod.day,
                       isFirst: index == 0,
                       isLast: index == state.transactions.length - 1,
+                      onChanged: () {
+                        // Refresh the history when a transaction is edited
+                        context.read<HistoryBloc>().add(const HistoryRefreshed());
+                      },
                     );
                   },
                 ),
