@@ -19,6 +19,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   
   freezed_annotation: ^3.0.0
+  json_annotation: ^4.9.0
   auto_route: ^10.0.1
   auto_route_generator: ^10.0.1
   flutter_svg: ^2.1.0
@@ -26,6 +27,7 @@ dependencies:
   intl: ^0.20.2
   equatable: ^2.0.7
   sensors_plus: ^6.1.1
+  fl_chart: ^0.69.1
   
   # Database
   objectbox: ^4.3.0
