@@ -152,12 +152,6 @@ class _CategoryPieChartState extends State<CategoryPieChart> with SingleTickerPr
         title: '',
         radius: 30,
         showTitle: false,
-        badgeWidget: _Badge(
-          category: category,
-          size: 32,
-          borderColor: color,
-        ),
-        badgePositionPercentageOffset: 0.9,
       );
     });
   }
@@ -185,61 +179,91 @@ class _CategoryPieChartState extends State<CategoryPieChart> with SingleTickerPr
           const SizedBox(height: 24),
           SizedBox(
             height: 240,
-            child: PieChart(
-              PieChartData(
-                sections: _generateSections(categories),
-                centerSpaceRadius: 90,
-                sectionsSpace: 1,
-                pieTouchData: PieTouchData(
-                  touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                    // Handle touch events if needed
-                  },
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                PieChart(
+                  PieChartData(
+                    sections: _generateSections(categories),
+                    centerSpaceRadius: 100,
+                    sectionsSpace: 1,
+                    pieTouchData: PieTouchData(
+                      touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                        // Handle touch events if needed
+                      },
+                    ),
+                  ),
                 ),
-              ),
+                // Legend inside the circle
+                SizedBox(
+                  width: 160,
+                  height: 160,
+                  child: _buildInnerLegend(categories),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 16),
-          _buildLegend(categories),
           const SizedBox(height: 16),
         ],
       ),
     );
   }
 
-  Widget _buildLegend(List<CategoryAnalysis> categories) {
+  Widget _buildInnerLegend(List<CategoryAnalysis> categories) {
     if (categories.isEmpty) {
-      return const SizedBox();
+      return const Center(
+        child: Text(
+          'Нет данных',
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      );
     }
 
-    return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: 16,
-      runSpacing: 8,
-      children: categories.map((category) {
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(
-                color: _getCategoryColor(categories.indexOf(category)),
-                shape: BoxShape.circle,
-              ),
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: categories.map((category) {
+          final index = categories.indexOf(category);
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: _getCategoryColor(index),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    '${category.percentage.toStringAsFixed(0)}% ${category.categoryName}',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 4),
-            Text(
-              '${category.percentage.toStringAsFixed(0)}% ${category.categoryName}',
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        );
-      }).toList(),
+          );
+        }).toList(),
+      ),
     );
+  }
+
+  Widget _buildLegend(List<CategoryAnalysis> categories) {
+    // This method is no longer used, but keeping it for compatibility
+    return const SizedBox();
   }
 
   Color _getCategoryColor(int index) {
@@ -256,92 +280,5 @@ class _CategoryPieChartState extends State<CategoryPieChart> with SingleTickerPr
       const Color(0xFF607D8B),  // Blue Grey
     ];
     return colors[index % colors.length];
-  }
-}
-
-class _Badge extends StatelessWidget {
-  final CategoryAnalysis category;
-  final double size;
-  final Color borderColor;
-
-  const _Badge({
-    required this.category,
-    required this.size,
-    required this.borderColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: borderColor,
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
-      child: Center(
-        child: Text(
-          category.emoji,
-          style: const TextStyle(fontSize: 16),
-        ),
-      ),
-    );
-  }
-}
-
-class CategoryPieChartTooltip extends StatelessWidget {
-  final CategoryAnalysis category;
-  
-  const CategoryPieChartTooltip({
-    super.key,
-    required this.category,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            category.categoryName,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${category.percentage.toStringAsFixed(2)}%',
-            style: const TextStyle(fontSize: 12),
-          ),
-        ],
-      ),
-    );
   }
 } 
