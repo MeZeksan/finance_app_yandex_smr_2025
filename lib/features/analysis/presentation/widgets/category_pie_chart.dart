@@ -261,11 +261,6 @@ class _CategoryPieChartState extends State<CategoryPieChart> with SingleTickerPr
     );
   }
 
-  Widget _buildLegend(List<CategoryAnalysis> categories) {
-    // This method is no longer used, but keeping it for compatibility
-    return const SizedBox();
-  }
-
   Color _getCategoryColor(int index) {
     final List<Color> colors = [
       const Color(0xFF66BB6A),  // Green

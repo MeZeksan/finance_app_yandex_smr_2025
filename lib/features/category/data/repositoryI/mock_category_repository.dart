@@ -5,40 +5,91 @@ import 'package:finance_app_yandex_smr_2025/features/category/domain/repositorie
 
 class MockCategoryRepository implements CategoryRepository {
   static final List<Category> _mockData = [
+    // Категории доходов
     Category(
       id: 1,
       name: "Зарплата",
-      emoji: "💼",
+      emoji: "💰",
       isIncome: true,
     ),
     Category(
       id: 2,
-      name: "Дивиденды",
-      emoji: "📈",
+      name: "Фриланс",
+      emoji: "💻",
       isIncome: true,
     ),
     Category(
       id: 3,
-      name: "Продукты",
-      emoji: "🍎",
-      isIncome: false,
-    ),
-    Category(
-      id: 4,
-      name: "Транспорт",
-      emoji: "🚗",
-      isIncome: false,
-    ),
-    Category(
-      id: 5,
-      name: "Подарок",
-      emoji: "🎁",
+      name: "Инвестиции",
+      emoji: "📈",
       isIncome: true,
     ),
     Category(
+      id: 4,
+      name: "Подработка",
+      emoji: "💼",
+      isIncome: true,
+    ),
+    
+    // Категории расходов
+    Category(
+      id: 5,
+      name: "Комикс-шоп",
+      emoji: "📚",
+      isIncome: false,
+    ),
+    Category(
       id: 6,
-      name: "Кафе",
+      name: "Зоомагазин",
+      emoji: "🐾",
+      isIncome: false,
+    ),
+    Category(
+      id: 7,
+      name: "Кофейня",
       emoji: "☕",
+      isIncome: false,
+    ),
+    Category(
+      id: 8,
+      name: "Кинотеатр",
+      emoji: "🎬",
+      isIncome: false,
+    ),
+    Category(
+      id: 9,
+      name: "Книжный",
+      emoji: "📖",
+      isIncome: false,
+    ),
+    Category(
+      id: 10,
+      name: "Игровой магазин",
+      emoji: "🎮",
+      isIncome: false,
+    ),
+    Category(
+      id: 11,
+      name: "Пиццерия",
+      emoji: "🍕",
+      isIncome: false,
+    ),
+    Category(
+      id: 12,
+      name: "Суши-бар",
+      emoji: "🍱",
+      isIncome: false,
+    ),
+    Category(
+      id: 13,
+      name: "Спортзал",
+      emoji: "🏋️",
+      isIncome: false,
+    ),
+    Category(
+      id: 14,
+      name: "Магазин музыки",
+      emoji: "🎵",
       isIncome: false,
     ),
   ];

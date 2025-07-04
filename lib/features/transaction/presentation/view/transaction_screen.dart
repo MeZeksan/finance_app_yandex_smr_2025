@@ -1,4 +1,5 @@
 import 'package:finance_app_yandex_smr_2025/features/history/presentation/view/history_screen.dart';
+import 'package:finance_app_yandex_smr_2025/features/transaction/data/repositoryI/mock_transaction_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/transaction/domain/repository/transaction_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/transaction/presentation/bloc/transaction.bloc.dart';
 
@@ -194,6 +195,12 @@ class TransactionsView extends StatelessWidget {
                                     transaction: state.transactions[index],
                                     isFirst: index == 0,
                                     isLast: index == state.transactions.length - 1,
+                                    onChanged: () {
+                                      // Refresh the transactions when one is edited
+                                      context.read<TransactionBloc>().add(
+                                        LoadTodayTransactions(isIncome: isIncome),
+                                      );
+                                    },
                                   );
                                 },
                               )
@@ -213,7 +220,18 @@ class TransactionsView extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         heroTag: buttonTag,
         shape: const CircleBorder(),
-        onPressed: () {
+        onPressed: () async {
+          final result = await TransactionScreen.show(
+            context,
+            isIncome,
+            MockTransactionRepository(),
+          );
+          if (result == true) {
+            // Refresh transactions after creating new one
+            context.read<TransactionBloc>().add(
+              LoadTodayTransactions(isIncome: isIncome),
+            );
+          }
         },
         backgroundColor: const Color(0xFFb2AE881),
         child: const Icon(
