@@ -54,8 +54,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
               Text(
                 'ШМР Финанс',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: const Color(0xffB2AE88),
+                  color: const Color(0xFFb2AE881),
                   fontWeight: FontWeight.bold,
+                  fontSize: 48,
                 ),
               ),
             ],

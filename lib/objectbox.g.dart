@@ -212,7 +212,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
   final model = obx_int.ModelInfo(
     entities: _entities,
     lastEntityId: const obx_int.IdUid(3, 1243530750600363184),
-    lastIndexId: const obx_int.IdUid(18, 7301699161370236505),
+    lastIndexId: const obx_int.IdUid(20, 5423346017247941480),
     lastRelationId: const obx_int.IdUid(0, 0),
     lastSequenceId: const obx_int.IdUid(0, 0),
     retiredEntityUids: const [],
@@ -235,6 +235,8 @@ obx_int.ModelDefinition getObjectBoxModel() {
       7880401937429714160,
       1903392201167010429,
       7301699161370236505,
+      4648476766453924530,
+      5423346017247941480,
     ],
     retiredPropertyUids: const [],
     retiredRelationUids: const [],
