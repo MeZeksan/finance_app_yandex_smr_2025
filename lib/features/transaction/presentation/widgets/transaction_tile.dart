@@ -717,7 +717,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                         // Delete Button (only in edit mode)
                         if (widget.isEditMode)
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
                             child: SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
@@ -725,7 +725,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFFE46962),
                                   foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(100),
                                   ),
