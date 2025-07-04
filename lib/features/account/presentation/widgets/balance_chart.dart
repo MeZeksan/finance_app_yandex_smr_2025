@@ -63,11 +63,11 @@ class BalanceChart extends StatelessWidget {
                   if (idx >= 0 && idx < data.length) {
                     final d = data[idx];
                     final day = d.date.day;
-                    // Показываем только 1, 15 и последний день месяца
+                    // Показываем только 1, средний день месяца и последний день месяца
                     final now = DateTime.now();
                     final lastDayOfMonth = DateTime(now.year, now.month + 1, 0).day;
                     
-                    if (day == 1 || day == 15 || day == lastDayOfMonth) {
+                    if (day == 1 || day == lastDayOfMonth ~/ 2 || day == lastDayOfMonth) {
                       final dateStr = DateFormat('dd.MM').format(d.date);
                       return SideTitleWidget(
                         axisSide: meta.axisSide,
@@ -103,10 +103,7 @@ class BalanceChart extends StatelessWidget {
                   toY: d.amount,
                   color: barColor,
                   width: 6,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(92),
-                    topRight: Radius.circular(92),
-                  ),
+                  borderRadius: BorderRadius.all(Radius.circular(92)),
                 ),
               ],
               showingTooltipIndicators: [],

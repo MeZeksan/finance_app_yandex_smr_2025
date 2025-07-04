@@ -17,7 +17,7 @@ class MockBankAccountRepository implements BankAccountRepository {
     final lastDayOfMonth = DateTime(now.year, now.month + 1, 0).day;
     var totalIncome = 0.0;
     var totalExpense = 0.0;
-    var currentBalance = 1000000.0; // Начальный баланс
+    var currentBalance = 0.0; // Начинаем с нулевого баланса
     
     // Рассчитываем суммы за месяц
     for (int day = 1; day <= lastDayOfMonth; day++) {

@@ -39,7 +39,7 @@ class MockTransactionRepository implements TransactionRepository {
   void _initializeWithMockData() {
     final now = DateTime.now();
     final lastDayOfMonth = DateTime(now.year, now.month + 1, 0).day;
-    var currentBalance = 1000000.0; // Начальный баланс
+    var currentBalance = 0.0; // Начинаем с нулевого баланса
     
     // Генерируем транзакции за весь месяц
     for (int day = 1; day <= lastDayOfMonth; day++) {
@@ -66,7 +66,7 @@ class MockTransactionRepository implements TransactionRepository {
         isIncome: isIncome,
       );
       
-      // Обновляем баланс
+      // Обновляем баланс (доходы добавляем, расходы вычитаем)
       if (isIncome) {
         currentBalance += amount;
       } else {
