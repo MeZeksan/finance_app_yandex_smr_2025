@@ -10,8 +10,6 @@ class TransactionEntity {
   final ToOne<AccountEntity> account = ToOne<AccountEntity>();
   final ToOne<CategoryEntity> category = ToOne<CategoryEntity>();
   
-  int accountId;
-  int categoryId;
   String amount;
   DateTime transactionDate;
   String? comment;
@@ -20,12 +18,17 @@ class TransactionEntity {
 
   TransactionEntity({
     this.id = 0,
-    required this.accountId,
-    required this.categoryId,
     required this.amount,
     required this.transactionDate,
     this.comment,
     required this.createdAt,
     required this.updatedAt,
   });
+  
+  // Вспомогательные геттеры для обратной совместимости
+  int get accountId => account.targetId;
+  set accountId(int id) => account.targetId = id;
+  
+  int get categoryId => category.targetId;
+  set categoryId(int id) => category.targetId = id;
 } 

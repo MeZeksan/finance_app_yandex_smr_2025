@@ -4,6 +4,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:finance_app_yandex_smr_2025/core/database/entities/account_entity.dart';
 import 'package:finance_app_yandex_smr_2025/core/database/entities/category_entity.dart';
 import 'package:finance_app_yandex_smr_2025/core/database/entities/transaction_entity.dart';
+import 'package:finance_app_yandex_smr_2025/core/database/entities/backup_operation_entity.dart';
 
 /// Provides access to the ObjectBox Store throughout the app.
 ///
@@ -21,10 +22,14 @@ class ObjectBox {
   /// A Box of Transaction entities.
   late final Box<TransactionEntity> transactionBox;
 
+  /// A Box of Backup Operation entities.
+  late final Box<BackupOperationEntity> backupOperationBox;
+
   ObjectBox._create(this._store) {
     accountBox = Box<AccountEntity>(_store);
     categoryBox = Box<CategoryEntity>(_store);
     transactionBox = Box<TransactionEntity>(_store);
+    backupOperationBox = Box<BackupOperationEntity>(_store);
   }
 
   /// Create an instance of ObjectBox to use throughout the app.

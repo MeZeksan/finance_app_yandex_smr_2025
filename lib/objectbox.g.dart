@@ -15,6 +15,7 @@ import 'package:objectbox/objectbox.dart' as obx;
 import 'package:objectbox_flutter_libs/objectbox_flutter_libs.dart';
 
 import 'core/database/entities/account_entity.dart';
+import 'core/database/entities/backup_operation_entity.dart';
 import 'core/database/entities/category_entity.dart';
 import 'core/database/entities/transaction_entity.dart';
 
@@ -171,6 +172,76 @@ final _entities = <obx_int.ModelEntity>[
     relations: <obx_int.ModelRelation>[],
     backlinks: <obx_int.ModelBacklink>[],
   ),
+  obx_int.ModelEntity(
+    id: const obx_int.IdUid(4, 3358571842132233271),
+    name: 'BackupOperationEntity',
+    lastPropertyId: const obx_int.IdUid(10, 5820082068494800474),
+    flags: 0,
+    properties: <obx_int.ModelProperty>[
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(1, 5727767306477363712),
+        name: 'id',
+        type: 6,
+        flags: 1,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(2, 7045915131423093057),
+        name: 'operationType',
+        type: 6,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(3, 881516174753026508),
+        name: 'dataType',
+        type: 6,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(4, 8661546849620015120),
+        name: 'originalId',
+        type: 6,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(5, 5121727424931777154),
+        name: 'jsonData',
+        type: 9,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(6, 3892950052902170044),
+        name: 'createdAt',
+        type: 10,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(7, 2493245499154490761),
+        name: 'attemptedSync',
+        type: 1,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(8, 1378733930590230979),
+        name: 'syncAttempts',
+        type: 6,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(9, 8248243406927731561),
+        name: 'lastSyncAttempt',
+        type: 10,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(10, 5820082068494800474),
+        name: 'lastSyncError',
+        type: 9,
+        flags: 0,
+      ),
+    ],
+    relations: <obx_int.ModelRelation>[],
+    backlinks: <obx_int.ModelBacklink>[],
+  ),
 ];
 
 /// Shortcut for [obx.Store.new] that passes [getObjectBoxModel] and for Flutter
@@ -211,8 +282,8 @@ Future<obx.Store> openStore({
 obx_int.ModelDefinition getObjectBoxModel() {
   final model = obx_int.ModelInfo(
     entities: _entities,
-    lastEntityId: const obx_int.IdUid(3, 1243530750600363184),
-    lastIndexId: const obx_int.IdUid(20, 5423346017247941480),
+    lastEntityId: const obx_int.IdUid(4, 3358571842132233271),
+    lastIndexId: const obx_int.IdUid(30, 4465890836934542631),
     lastRelationId: const obx_int.IdUid(0, 0),
     lastSequenceId: const obx_int.IdUid(0, 0),
     retiredEntityUids: const [],
@@ -237,6 +308,16 @@ obx_int.ModelDefinition getObjectBoxModel() {
       7301699161370236505,
       4648476766453924530,
       5423346017247941480,
+      3175971139045727290,
+      2058105902653660033,
+      7495226091645541985,
+      6540662413114824772,
+      8200747652622722405,
+      5020021149545051460,
+      133675210022402219,
+      2400884134035597496,
+      1035795766311969637,
+      4465890836934542631,
     ],
     retiredPropertyUids: const [],
     retiredRelationUids: const [],
@@ -397,18 +478,6 @@ obx_int.ModelDefinition getObjectBoxModel() {
           4,
           0,
         );
-        final accountIdParam = const fb.Int64Reader().vTableGet(
-          buffer,
-          rootOffset,
-          6,
-          0,
-        );
-        final categoryIdParam = const fb.Int64Reader().vTableGet(
-          buffer,
-          rootOffset,
-          8,
-          0,
-        );
         final amountParam = const fb.StringReader(
           asciiOptimization: true,
         ).vTableGet(buffer, rootOffset, 10, '');
@@ -424,15 +493,127 @@ obx_int.ModelDefinition getObjectBoxModel() {
         final updatedAtParam = DateTime.fromMillisecondsSinceEpoch(
           const fb.Int64Reader().vTableGet(buffer, rootOffset, 18, 0),
         );
-        final object = TransactionEntity(
+        final object =
+            TransactionEntity(
+                id: idParam,
+                amount: amountParam,
+                transactionDate: transactionDateParam,
+                comment: commentParam,
+                createdAt: createdAtParam,
+                updatedAt: updatedAtParam,
+              )
+              ..accountId = const fb.Int64Reader().vTableGet(
+                buffer,
+                rootOffset,
+                6,
+                0,
+              )
+              ..categoryId = const fb.Int64Reader().vTableGet(
+                buffer,
+                rootOffset,
+                8,
+                0,
+              );
+
+        return object;
+      },
+    ),
+    BackupOperationEntity: obx_int.EntityDefinition<BackupOperationEntity>(
+      model: _entities[3],
+      toOneRelations: (BackupOperationEntity object) => [],
+      toManyRelations: (BackupOperationEntity object) => {},
+      getId: (BackupOperationEntity object) => object.id,
+      setId: (BackupOperationEntity object, int id) {
+        object.id = id;
+      },
+      objectToFB: (BackupOperationEntity object, fb.Builder fbb) {
+        final jsonDataOffset = fbb.writeString(object.jsonData);
+        final lastSyncErrorOffset =
+            object.lastSyncError == null
+                ? null
+                : fbb.writeString(object.lastSyncError!);
+        fbb.startTable(11);
+        fbb.addInt64(0, object.id);
+        fbb.addInt64(1, object.operationType);
+        fbb.addInt64(2, object.dataType);
+        fbb.addInt64(3, object.originalId);
+        fbb.addOffset(4, jsonDataOffset);
+        fbb.addInt64(5, object.createdAt.millisecondsSinceEpoch);
+        fbb.addBool(6, object.attemptedSync);
+        fbb.addInt64(7, object.syncAttempts);
+        fbb.addInt64(8, object.lastSyncAttempt?.millisecondsSinceEpoch);
+        fbb.addOffset(9, lastSyncErrorOffset);
+        fbb.finish(fbb.endTable());
+        return object.id;
+      },
+      objectFromFB: (obx.Store store, ByteData fbData) {
+        final buffer = fb.BufferContext(fbData);
+        final rootOffset = buffer.derefObject(0);
+        final lastSyncAttemptValue = const fb.Int64Reader().vTableGetNullable(
+          buffer,
+          rootOffset,
+          20,
+        );
+        final idParam = const fb.Int64Reader().vTableGet(
+          buffer,
+          rootOffset,
+          4,
+          0,
+        );
+        final operationTypeParam = const fb.Int64Reader().vTableGet(
+          buffer,
+          rootOffset,
+          6,
+          0,
+        );
+        final dataTypeParam = const fb.Int64Reader().vTableGet(
+          buffer,
+          rootOffset,
+          8,
+          0,
+        );
+        final originalIdParam = const fb.Int64Reader().vTableGet(
+          buffer,
+          rootOffset,
+          10,
+          0,
+        );
+        final jsonDataParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 12, '');
+        final createdAtParam = DateTime.fromMillisecondsSinceEpoch(
+          const fb.Int64Reader().vTableGet(buffer, rootOffset, 14, 0),
+        );
+        final attemptedSyncParam = const fb.BoolReader().vTableGet(
+          buffer,
+          rootOffset,
+          16,
+          false,
+        );
+        final syncAttemptsParam = const fb.Int64Reader().vTableGet(
+          buffer,
+          rootOffset,
+          18,
+          0,
+        );
+        final lastSyncAttemptParam =
+            lastSyncAttemptValue == null
+                ? null
+                : DateTime.fromMillisecondsSinceEpoch(lastSyncAttemptValue);
+        final lastSyncErrorParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGetNullable(buffer, rootOffset, 22);
+        final object = BackupOperationEntity(
           id: idParam,
-          accountId: accountIdParam,
-          categoryId: categoryIdParam,
-          amount: amountParam,
-          transactionDate: transactionDateParam,
-          comment: commentParam,
+          operationType: operationTypeParam,
+          dataType: dataTypeParam,
+          originalId: originalIdParam,
+          jsonData: jsonDataParam,
           createdAt: createdAtParam,
-          updatedAt: updatedAtParam,
+          attemptedSync: attemptedSyncParam,
+          syncAttempts: syncAttemptsParam,
+          lastSyncAttempt: lastSyncAttemptParam,
+          lastSyncError: lastSyncErrorParam,
         );
 
         return object;
@@ -549,5 +730,58 @@ class TransactionEntity_ {
   /// See [TransactionEntity.updatedAt].
   static final updatedAt = obx.QueryDateProperty<TransactionEntity>(
     _entities[2].properties[7],
+  );
+}
+
+/// [BackupOperationEntity] entity fields to define ObjectBox queries.
+class BackupOperationEntity_ {
+  /// See [BackupOperationEntity.id].
+  static final id = obx.QueryIntegerProperty<BackupOperationEntity>(
+    _entities[3].properties[0],
+  );
+
+  /// See [BackupOperationEntity.operationType].
+  static final operationType = obx.QueryIntegerProperty<BackupOperationEntity>(
+    _entities[3].properties[1],
+  );
+
+  /// See [BackupOperationEntity.dataType].
+  static final dataType = obx.QueryIntegerProperty<BackupOperationEntity>(
+    _entities[3].properties[2],
+  );
+
+  /// See [BackupOperationEntity.originalId].
+  static final originalId = obx.QueryIntegerProperty<BackupOperationEntity>(
+    _entities[3].properties[3],
+  );
+
+  /// See [BackupOperationEntity.jsonData].
+  static final jsonData = obx.QueryStringProperty<BackupOperationEntity>(
+    _entities[3].properties[4],
+  );
+
+  /// See [BackupOperationEntity.createdAt].
+  static final createdAt = obx.QueryDateProperty<BackupOperationEntity>(
+    _entities[3].properties[5],
+  );
+
+  /// See [BackupOperationEntity.attemptedSync].
+  static final attemptedSync = obx.QueryBooleanProperty<BackupOperationEntity>(
+    _entities[3].properties[6],
+  );
+
+  /// See [BackupOperationEntity.syncAttempts].
+  static final syncAttempts = obx.QueryIntegerProperty<BackupOperationEntity>(
+    _entities[3].properties[7],
+  );
+
+  /// See [BackupOperationEntity.lastSyncAttempt].
+  static final lastSyncAttempt = obx.QueryDateProperty<BackupOperationEntity>(
+    _entities[3].properties[8],
+  );
+
+  /// See [BackupOperationEntity.lastSyncError].
+  static final lastSyncError = obx.QueryStringProperty<BackupOperationEntity>(
+    _entities[3].properties[9],
   );
 }

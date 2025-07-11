@@ -22,17 +22,10 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
     try {
       final account = await _repository.getAccountById(event.accountId);
       
-      if (account != null) {
-        emit(state.copyWith(
-          status: AccountStatus.success,
-          account: account,
-        ));
-      } else {
-        emit(state.copyWith(
-          status: AccountStatus.failure,
-          errorMessage: 'Счет не найден',
-        ));
-      }
+      emit(state.copyWith(
+        status: AccountStatus.success,
+        account: account,
+      ));
     } catch (error) {
       emit(state.copyWith(
         status: AccountStatus.failure,

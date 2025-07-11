@@ -1,11 +1,10 @@
 import 'package:auto_route/annotations.dart';
+import 'package:finance_app_yandex_smr_2025/core/di/service_locator.dart';
 import 'package:finance_app_yandex_smr_2025/features/analysis/presentation/bloc/analysis_bloc.dart';
 import 'package:finance_app_yandex_smr_2025/features/analysis/presentation/bloc/analysis_event.dart';
 import 'package:finance_app_yandex_smr_2025/features/analysis/presentation/bloc/analysis_state.dart';
 import 'package:finance_app_yandex_smr_2025/features/analysis/presentation/view/category_transactions_screen.dart';
 import 'package:finance_app_yandex_smr_2025/features/analysis/presentation/widgets/widgets.dart';
-import 'package:finance_app_yandex_smr_2025/features/transaction/data/repositoryI/mock_transaction_repository.dart';
-import 'package:finance_app_yandex_smr_2025/features/transaction/domain/repository/transaction_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -22,10 +21,10 @@ class AnalysisScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final TransactionRepository repository = MockTransactionRepository();
     return BlocProvider(
-      create: (context) => AnalysisBloc(repository: repository)
-        ..add(AnalysisInitialized(isIncome: isIncome)),
+      create: (context) => AnalysisBloc(
+        repository: ServiceLocator.transactionRepository,
+      )..add(AnalysisInitialized(isIncome: isIncome)),
       child: AnalysisView(isIncome: isIncome),
     );
   }

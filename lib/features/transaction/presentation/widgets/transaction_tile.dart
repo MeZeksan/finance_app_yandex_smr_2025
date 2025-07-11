@@ -1,3 +1,4 @@
+import 'package:finance_app_yandex_smr_2025/core/di/service_locator.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/data/models/account_brief/account_brief.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/data/repositoryI/mock_bank_account_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/domain/repository/bank_account_repository.dart';
@@ -14,15 +15,17 @@ import 'package:intl/intl.dart';
 
 class TransactionTile extends StatelessWidget {
   final TransactionResponce transaction;
+  final bool showDate;
   final bool isFirst;
   final bool isLast;
   final VoidCallback? onChanged;
 
   const TransactionTile({
     super.key,
-    required this.transaction, 
-    required this.isFirst, 
-    required this.isLast,
+    required this.transaction,
+    this.showDate = false,
+    this.isFirst = false,
+    this.isLast = false,
     this.onChanged,
   });
 
@@ -32,6 +35,8 @@ class TransactionTile extends StatelessWidget {
     final formatter = NumberFormat('#,##0', 'ru_RU');
     final formattedAmount = '${formatter.format(amount.round())} ₽';
     
+    final dateString = DateFormat('dd.MM.yyyy', 'ru_RU').format(transaction.transactionDate);
+    final timeString = DateFormat('HH:mm', 'ru_RU').format(transaction.transactionDate);
 
     return Container(
       decoration: const BoxDecoration(
@@ -76,8 +81,9 @@ class TransactionTile extends StatelessWidget {
               ),
               ],
             ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
+            trailing: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
                   formattedAmount,
@@ -86,15 +92,28 @@ class TransactionTile extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(width: 8),
-                const Icon(
-                  Icons.chevron_right,
-                  color: Colors.grey,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      showDate ? '$dateString $timeString' : timeString,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[500],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(
+                      Icons.chevron_right,
+                      color: Colors.grey,
+                      size: 16,
+                    ),
+                  ],
                 ),
               ],
             ),
             onTap: () async {
-              final result = await _showTransactionModal(context, transaction);
+              final result = await _showEditTransactionModal(context, transaction);
               if (result == true && onChanged != null) {
                 onChanged!();
               }
@@ -107,12 +126,12 @@ class TransactionTile extends StatelessWidget {
     );
   }
 
-  Future<bool?> _showTransactionModal(BuildContext context, TransactionResponce transaction) {
+  Future<bool?> _showEditTransactionModal(BuildContext context, TransactionResponce transaction) {
     return Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (context) => TransactionScreen.edit(
           transaction: transaction,
-          transactionRepository: MockTransactionRepository.instance,
+          transactionRepository: ServiceLocator.transactionRepository,
         ),
       ),
     );
@@ -139,14 +158,20 @@ class TransactionScreen extends StatefulWidget {
   static Future<bool?> show(
     BuildContext context,
     bool isIncome,
-    TransactionRepository repository,
-  ) {
+    TransactionRepository repository, {
+    TransactionResponce? transaction,
+  }) {
     return Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (context) => TransactionScreen.create(
-          isIncome: isIncome,
-          transactionRepository: MockTransactionRepository.instance,
-        ),
+        builder: (context) => transaction != null
+            ? TransactionScreen.edit(
+                transaction: transaction,
+                transactionRepository: repository,
+              )
+            : TransactionScreen.create(
+                isIncome: isIncome,
+                transactionRepository: repository,
+              ),
       ),
     );
   }
@@ -169,12 +194,14 @@ class _TransactionScreenState extends State<TransactionScreen> {
   bool _isLoading = false;
   bool _isSaving = false;
   
-  final BankAccountRepository _accountRepository = MockBankAccountRepository();
-  final CategoryRepository _categoryRepository = MockCategoryRepository();
+  late final BankAccountRepository _accountRepository;
+  late final CategoryRepository _categoryRepository;
 
   @override
   void initState() {
     super.initState();
+    _accountRepository = ServiceLocator.bankAccountRepository;
+    _categoryRepository = ServiceLocator.categoryRepository;
     _initializeData();
   }
 

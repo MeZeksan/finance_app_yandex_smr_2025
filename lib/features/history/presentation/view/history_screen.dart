@@ -1,8 +1,7 @@
 import 'package:auto_route/annotations.dart';
+import 'package:finance_app_yandex_smr_2025/core/di/service_locator.dart';
 import 'package:finance_app_yandex_smr_2025/features/history/presentation/bloc/history_bloc.dart';
 import 'package:finance_app_yandex_smr_2025/features/history/presentation/widgets/widgets.dart';
-import 'package:finance_app_yandex_smr_2025/features/transaction/data/repositoryI/mock_transaction_repository.dart';
-import 'package:finance_app_yandex_smr_2025/features/transaction/domain/repository/transaction_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -19,11 +18,12 @@ class HistoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final TransactionRepository repository = MockTransactionRepository();
     return BlocProvider(
-      create: (context) => HistoryBloc(repository: repository)
-        ..add(HistoryInitialized(isIncome: isIncome)),
-      child: HistoryView(isIncome: isIncome));
+      create: (context) => HistoryBloc(
+        repository: ServiceLocator.transactionRepository,
+      )..add(HistoryInitialized(isIncome: isIncome)),
+      child: HistoryView(isIncome: isIncome),
+    );
   }
 }
 

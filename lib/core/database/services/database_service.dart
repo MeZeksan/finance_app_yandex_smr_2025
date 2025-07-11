@@ -14,6 +14,8 @@ class DatabaseService {
 
   bool _isInitialized = false;
 
+  ObjectBox get objectBox => _objectBox;
+
   Future<void> initialize() async {
     if (_isInitialized) return;
     _objectBox = await ObjectBox.create();

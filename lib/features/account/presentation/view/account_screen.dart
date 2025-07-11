@@ -3,7 +3,7 @@ import 'dart:math';
 
 import 'package:auto_route/annotations.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/data/models/account_update_request/account_update_request.dart';
-import 'package:finance_app_yandex_smr_2025/features/account/data/repositoryI/mock_bank_account_repository.dart';
+import 'package:finance_app_yandex_smr_2025/core/di/service_locator.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/presentation/bloc/account_bloc.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/presentation/bloc/account_event.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/presentation/bloc/account_state.dart';
@@ -23,7 +23,7 @@ class AccountScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => AccountBloc(
-        repository: MockBankAccountRepository(),
+        repository: ServiceLocator.bankAccountRepository,
       )..add(const LoadAccount(accountId: 1)),
       child: const AccountView(),
     );

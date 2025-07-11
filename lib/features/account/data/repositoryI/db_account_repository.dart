@@ -49,7 +49,6 @@ class DbAccountRepository implements BankAccountRepository {
     );
   }
 
-  @override
   Future<AccountResponce> createAccount(AccountCreateRequest request) async {
     final now = DateTime.now();
     final account = AccountEntity(
@@ -89,18 +88,15 @@ class DbAccountRepository implements BankAccountRepository {
     );
   }
 
-  @override
   Future<bool> deleteAccount(int accountId) async {
     return await _databaseService.deleteAccount(accountId);
   }
 
-  @override
   Future<List<AccountBrief>> getAllAccounts() async {
     final accounts = await _databaseService.getAllAccounts();
     return accounts.map(_mapToBrief).toList();
   }
 
-  @override
   Future<AccountHistoryResponce> getHistory(int accountId) async {
     // Получаем аккаунт из БД
     final account = await _databaseService.getAccountById(accountId);
@@ -143,35 +139,66 @@ class DbAccountRepository implements BankAccountRepository {
     );
   }
 
-  @override
-  Future<AccountResponce?> getAccountById(int accountId) async {
-    final account = await _databaseService.getAccountById(accountId);
-    if (account == null) return null;
+  Future<AccountResponce> getAccountById(int accountId) async {
+    final entity = await _databaseService.getAccountById(accountId);
     
-    // Создаем пустые статистики для демонстрации
+    // Если счет найден, возвращаем его
+    if (entity != null) {
+      return _mapEntityToResponse(entity);
+    }
+    
+    // Проверяем, есть ли вообще какие-то счета в базе
+    final allAccounts = await _databaseService.getAllAccounts();
+    if (allAccounts.isNotEmpty) {
+      // Возвращаем первый найденный счет
+      return _mapEntityToResponse(allAccounts.first);
+    }
+    
+    // Если счет не найден и база пуста, создаем дефолтный
+    final now = DateTime.now();
+    final defaultAccount = AccountEntity(
+      id: 0, // Используем 0 для автогенерации ID в ObjectBox
+      name: 'Основной счет',
+      balance: '0.00',
+      currency: 'RUB',
+      createdAt: now,
+      updatedAt: now,
+    );
+    
+    // Сохраняем в локальную базу - ObjectBox автоматически присвоит ID
+    final actualId = await _databaseService.addAccount(defaultAccount);
+    
+    // Получаем созданный счет с правильным ID
+    final savedAccount = await _databaseService.getAccountById(actualId);
+    return _mapEntityToResponse(savedAccount!);
+  }
+
+  // Вспомогательный метод для маппинга сущности в ответ
+  AccountResponce _mapEntityToResponse(AccountEntity entity) {
+    // Создаем базовые статистики для демонстрации
     final emptyIncomeStats = StatItem(
       categoryId: 0,
       categoryName: 'Доходы',
       emoji: '📈',
-      amount: '0',
+      amount: '0.00',
     );
     
     final emptyExpenseStats = StatItem(
       categoryId: 0,
       categoryName: 'Расходы',
       emoji: '📉',
-      amount: '0',
+      amount: '0.00',
     );
     
     return AccountResponce(
-      id: account.id,
-      name: account.name,
-      balance: account.balance,
-      currency: account.currency,
+      id: entity.id,
+      name: entity.name,
+      balance: entity.balance,
+      currency: entity.currency,
       incomeStats: emptyIncomeStats,
       expenseStats: emptyExpenseStats,
-      createdAt: account.createdAt,
-      updatedAt: account.updatedAt,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
     );
   }
 
