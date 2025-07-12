@@ -213,12 +213,10 @@ class NetworkBankAccountRepository implements BankAccountRepository {
   }
 
   Future<AccountResponce> createAccount(AccountCreateRequest request) async {
-    final tempId = DateTime.now().millisecondsSinceEpoch;
-    
-    // Создаем временный аккаунт локально
+    // Создаем временный аккаунт локально с ID = 0 для автогенерации
     final now = DateTime.now();
     final localAccount = AccountEntity(
-      id: tempId,
+      id: 0, // Используем 0 для автогенерации ID в ObjectBox
       name: request.name,
       balance: request.balance,
       currency: request.currency,

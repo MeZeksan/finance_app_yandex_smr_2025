@@ -4,6 +4,7 @@ import 'package:finance_app_yandex_smr_2025/core/database/services/database_serv
 import 'package:finance_app_yandex_smr_2025/core/network/api_client.dart';
 import 'package:finance_app_yandex_smr_2025/core/network/network_service.dart';
 import 'package:finance_app_yandex_smr_2025/objectbox.g.dart';
+import 'dart:developer' as developer;
 
 class BackupService {
   static final BackupService _instance = BackupService._internal();
@@ -55,7 +56,7 @@ class BackupService {
     );
     
     await _databaseService.objectBox.backupOperationBox.putAsync(backupOperation);
-    print('Backup operation added: ${operationType.name} ${dataType.name} $originalId');
+    developer.log('📋 Backup operation added: ${operationType.name} ${dataType.name} $originalId', name: 'BackupService');
   }
 
   /// Получить все операции для синхронизации
@@ -110,32 +111,35 @@ class BackupService {
   /// Синхронизировать все ожидающие операции
   Future<bool> syncPendingOperations() async {
     if (!_networkService.isConnected) {
-      print('No network connection. Skipping sync.');
+      developer.log('📵 No network connection. Skipping sync.', name: 'BackupService');
       return false;
     }
 
     final pendingOperations = await getPendingBackupOperations();
     if (pendingOperations.isEmpty) {
-      print('No pending operations to sync.');
+      developer.log('✅ No pending operations to sync.', name: 'BackupService');
       return true;
     }
 
+    developer.log('🔄 Syncing ${pendingOperations.length} pending operations', name: 'BackupService');
     bool allSynced = true;
     
     for (final operation in pendingOperations) {
       try {
+        developer.log('🔄 Syncing operation: ${operation.operationTypeEnum.name} ${operation.dataTypeEnum.name} ${operation.originalId}', name: 'BackupService');
         final success = await _syncOperation(operation);
         if (success) {
           await markOperationAsSynced(operation.id);
-          print('Operation synced successfully: ${operation.operationTypeEnum.name} ${operation.dataTypeEnum.name} ${operation.originalId}');
+          developer.log('✅ Operation synced successfully: ${operation.operationTypeEnum.name} ${operation.dataTypeEnum.name} ${operation.originalId}', name: 'BackupService');
         } else {
           allSynced = false;
           await markOperationAsFailed(operation.id, 'Unknown sync error');
+          developer.log('❌ Operation sync failed: ${operation.operationTypeEnum.name} ${operation.dataTypeEnum.name} ${operation.originalId}', name: 'BackupService');
         }
       } catch (e) {
         allSynced = false;
         await markOperationAsFailed(operation.id, e.toString());
-        print('Failed to sync operation: ${operation.operationTypeEnum.name} ${operation.dataTypeEnum.name} ${operation.originalId} - $e');
+        developer.log('❌ Error syncing operation: ${operation.operationTypeEnum.name} ${operation.dataTypeEnum.name} ${operation.originalId} - $e', name: 'BackupService');
       }
     }
 
@@ -156,25 +160,43 @@ class BackupService {
           return await _syncCategoryOperation(operation, data);
       }
     } catch (e) {
-      print('Error syncing operation: $e');
+      developer.log('❌ Error syncing operation: $e', name: 'BackupService');
       return false;
     }
   }
 
   /// Синхронизировать операцию с транзакцией
   Future<bool> _syncTransactionOperation(BackupOperationEntity operation, Map<String, dynamic> data) async {
-    switch (operation.operationTypeEnum) {
-      case BackupOperationType.create:
-        final response = await _apiClient.post('/transactions', data: data);
-        return response.statusCode == 200 || response.statusCode == 201;
-      
-      case BackupOperationType.update:
-        final response = await _apiClient.put('/transactions/${operation.originalId}', data: data);
-        return response.statusCode == 200;
-      
-      case BackupOperationType.delete:
-        final response = await _apiClient.delete('/transactions/${operation.originalId}');
-        return response.statusCode == 200 || response.statusCode == 204;
+    try {
+      switch (operation.operationTypeEnum) {
+        case BackupOperationType.create:
+          developer.log('🔄 Creating transaction on server: ${json.encode(data)}', name: 'BackupService');
+          final response = await _apiClient.post('/transactions', data: data);
+          developer.log('📊 Server response: ${response.statusCode} - ${response.data}', name: 'BackupService');
+          
+          final isSuccess = response.statusCode == 200 || response.statusCode == 201;
+          if (isSuccess) {
+            developer.log('✅ Transaction created successfully on server', name: 'BackupService');
+          } else {
+            developer.log('❌ Failed to create transaction: ${response.statusCode}', name: 'BackupService');
+          }
+          return isSuccess;
+        
+        case BackupOperationType.update:
+          developer.log('🔄 Updating transaction ${operation.originalId} on server: ${json.encode(data)}', name: 'BackupService');
+          final response = await _apiClient.put('/transactions/${operation.originalId}', data: data);
+          developer.log('📊 Server response: ${response.statusCode} - ${response.data}', name: 'BackupService');
+          return response.statusCode == 200;
+        
+        case BackupOperationType.delete:
+          developer.log('🔄 Deleting transaction ${operation.originalId} on server', name: 'BackupService');
+          final response = await _apiClient.delete('/transactions/${operation.originalId}');
+          developer.log('📊 Server response: ${response.statusCode} - ${response.data}', name: 'BackupService');
+          return response.statusCode == 200 || response.statusCode == 204;
+      }
+    } catch (e) {
+      developer.log('❌ Error syncing transaction: $e', name: 'BackupService');
+      throw e;
     }
   }
 
@@ -229,7 +251,22 @@ class BackupService {
     }
     
     if (oldOperations.isNotEmpty) {
-      print('Cleaned up ${oldOperations.length} old failed operations');
+      developer.log('🧹 Cleaned up ${oldOperations.length} old failed operations', name: 'BackupService');
     }
+  }
+
+  /// Принудительно очистить все ожидающие операции (для отладки)
+  Future<void> clearAllPendingOperations() async {
+    developer.log('🧹 Принудительная очистка всех ожидающих операций', name: 'BackupService');
+    
+    final pendingOperations = await getPendingBackupOperations();
+    developer.log('📊 Найдено ${pendingOperations.length} ожидающих операций', name: 'BackupService');
+    
+    for (final operation in pendingOperations) {
+      await _deleteBackupOperation(operation.id);
+      developer.log('🗑️ Удалена операция: ${operation.operationTypeEnum.name} ${operation.dataTypeEnum.name} ${operation.originalId}', name: 'BackupService');
+    }
+    
+    developer.log('✅ Все ожидающие операции очищены', name: 'BackupService');
   }
 } 

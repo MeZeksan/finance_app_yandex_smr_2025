@@ -1,17 +1,15 @@
 import 'package:finance_app_yandex_smr_2025/core/di/service_locator.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/data/models/account_brief/account_brief.dart';
-import 'package:finance_app_yandex_smr_2025/features/account/data/repositoryI/mock_bank_account_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/domain/repository/bank_account_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/category/data/models/category.dart';
-import 'package:finance_app_yandex_smr_2025/features/category/data/repositoryI/mock_category_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/category/domain/repositories/category_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/transaction/data/models/transaction/transaction_request/transaction_request.dart';
 import 'package:finance_app_yandex_smr_2025/features/transaction/data/models/transaction/transaction_responce/transaction_responce.dart';
-import 'package:finance_app_yandex_smr_2025/features/transaction/data/repositoryI/mock_transaction_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/transaction/domain/repository/transaction_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'dart:developer' as developer;
 
 class TransactionTile extends StatelessWidget {
   final TransactionResponce transaction;
@@ -223,6 +221,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
   }
 
   Future<void> _loadAccountsAndCategories() async {
+    developer.log('🔄 Загрузка данных для TransactionScreen (isIncome: ${widget.isIncome})', name: 'TransactionScreen');
+    
     setState(() {
       _isLoading = true;
     });
@@ -253,9 +253,13 @@ class _TransactionScreenState extends State<TransactionScreen> {
       }
 
       // Load categories based on transaction type
+      developer.log('📋 Загрузка категорий через ${_categoryRepository.runtimeType}', name: 'TransactionScreen');
+      
       final categoryEntities = widget.isIncome 
           ? await _categoryRepository.getIncomeCategories()
           : await _categoryRepository.getExpenseCategories();
+      
+      developer.log('📊 Получено ${categoryEntities.length} категорий ${widget.isIncome ? 'доходов' : 'расходов'}', name: 'TransactionScreen');
       
       _categories = categoryEntities.map((entity) => Category(
         id: entity.id,
@@ -264,7 +268,13 @@ class _TransactionScreenState extends State<TransactionScreen> {
         isIncome: entity.isIncome,
       )).toList();
 
+      // Логируем каждую категорию
+      for (final category in _categories) {
+        developer.log('📝 Категория: ID=${category.id}, ${category.name} ${category.emoji}', name: 'TransactionScreen');
+      }
+
     } catch (e) {
+      developer.log('❌ Ошибка загрузки данных: $e', name: 'TransactionScreen');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Ошибка загрузки данных: $e')),
@@ -422,7 +432,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
         accountId: _selectedAccount!.id,
         categoryId: _selectedCategory!.id,
         amount: amount.toStringAsFixed(2),
-        transactionDate: _selectedDate,
+        transactionDate: _selectedDate.toUtc(), // Преобразуем в UTC для сервера
         comment: _commentController.text.trim().isEmpty ? null : _commentController.text.trim(),
       );
 

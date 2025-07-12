@@ -11,6 +11,7 @@ import 'package:finance_app_yandex_smr_2025/core/database/entities/account_entit
 import 'package:finance_app_yandex_smr_2025/core/database/entities/category_entity.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/data/models/account_brief/account_brief.dart';
 import 'package:finance_app_yandex_smr_2025/features/category/data/models/category.dart';
+import 'package:finance_app_yandex_smr_2025/features/category/data/repositoryI/network_category_repository.dart';
 import 'dart:developer' as developer;
 
 class NetworkTransactionRepository implements TransactionRepository {
@@ -18,6 +19,17 @@ class NetworkTransactionRepository implements TransactionRepository {
   final ApiClient _apiClient = ApiClient();
   final NetworkService _networkService = NetworkService();
   final BackupService _backupService = BackupService();
+  
+  static bool _initialized = false;
+  
+  Future<void> _ensureInitialized() async {
+    if (_initialized) return;
+    
+    developer.log('🔧 Инициализация NetworkTransactionRepository', name: 'NetworkTransactionRepository');
+    // При первом запуске очищаем старые проблемные операции
+    await _backupService.clearAllPendingOperations();
+    _initialized = true;
+  }
 
   @override
   Future<TransactionResponce?> getTransactionById(int transactionId) async {
@@ -73,6 +85,8 @@ class NetworkTransactionRepository implements TransactionRepository {
     required DateTime dateTo,
     required bool isIncome,
   }) async {
+    await _ensureInitialized();
+    
     developer.log(
       '🔍 Получение транзакций за период: ${dateFrom.toLocal()} - ${dateTo.toLocal()}, isIncome: $isIncome',
       name: 'NetworkTransactionRepository',
@@ -82,9 +96,82 @@ class NetworkTransactionRepository implements TransactionRepository {
     if (_networkService.isConnected) {
       developer.log('📡 Синхронизация ожидающих операций', name: 'NetworkTransactionRepository');
       await _backupService.syncPendingOperations();
+
+      // КРИТИЧНО: Сначала загружаем все категории через CategoryRepository
+      developer.log('📋 Предварительная загрузка категорий через CategoryRepository', name: 'NetworkTransactionRepository');
+      try {
+        // Импортируем и используем CategoryRepository для загрузки категорий
+        final categoryRepository = NetworkCategoryRepository();
+        final categories = await categoryRepository.getAllCategories();
+        developer.log('📊 Предзагружено ${categories.length} категорий', name: 'NetworkTransactionRepository');
+      } catch (e) {
+        developer.log('⚠️ Ошибка предзагрузки категорий через репозиторий: $e', name: 'NetworkTransactionRepository');
+      }
+
+      // ВСЕГДА проверяем сервер в первую очередь для получения свежих данных
+      developer.log('🌐 Запрос транзакций с сервера: GET /transactions', name: 'NetworkTransactionRepository');
+      try {
+        final response = await _apiClient.get('/transactions');
+        if (response.statusCode == 200 && response.data != null) {
+          developer.log('✅ Получен ответ от сервера: транзакций найдено', name: 'NetworkTransactionRepository');
+          
+          List<dynamic> transactionsData;
+          if (response.data is List) {
+            transactionsData = response.data as List<dynamic>;
+          } else if (response.data is Map && response.data['data'] != null) {
+            transactionsData = response.data['data'] as List<dynamic>;
+          } else {
+            developer.log('❌ Неожиданный формат ответа от сервера', name: 'NetworkTransactionRepository');
+            transactionsData = [];
+          }
+
+          if (transactionsData.isNotEmpty) {
+            developer.log('📊 Получено ${transactionsData.length} транзакций с сервера', name: 'NetworkTransactionRepository');
+            
+            // Сохраняем все транзакции в локальную базу и фильтруем нужные
+            final List<TransactionResponce> filteredTransactions = [];
+            
+            for (final transactionJson in transactionsData) {
+              if (transactionJson is Map<String, dynamic>) {
+                try {
+                  // Создаем TransactionResponce из данных сервера
+                  final serverTransaction = await _parseServerTransactionToResponse(transactionJson);
+                  if (serverTransaction != null) {
+                    // Сохраняем в локальную базу
+                    await _saveTransactionToLocal(serverTransaction);
+                    
+                    // Проверяем фильтры
+                    final transactionDate = serverTransaction.transactionDate;
+                    final isInDateRange = transactionDate.isAfter(dateFrom.subtract(const Duration(seconds: 1))) &&
+                        transactionDate.isBefore(dateTo.add(const Duration(seconds: 1)));
+                    final isCorrectType = serverTransaction.category.isIncome == isIncome;
+                    
+                    if (isInDateRange && isCorrectType) {
+                      filteredTransactions.add(serverTransaction);
+                    }
+                  }
+                } catch (e) {
+                  developer.log('⚠️ Ошибка парсинга транзакции: $e', name: 'NetworkTransactionRepository');
+                }
+              }
+            }
+            
+            developer.log('📈 Отфильтровано ${filteredTransactions.length} транзакций по заданным критериям', name: 'NetworkTransactionRepository');
+            return filteredTransactions;
+          } else {
+            developer.log('⚠️ Сервер вернул пустой список транзакций', name: 'NetworkTransactionRepository');
+          }
+        } else {
+          developer.log('❌ Сервер вернул статус: ${response.statusCode}', name: 'NetworkTransactionRepository');
+        }
+      } catch (e) {
+        developer.log('❌ Ошибка при получении транзакций с сервера: $e', name: 'NetworkTransactionRepository');
+      }
+    } else {
+      developer.log('📵 Нет подключения к сети', name: 'NetworkTransactionRepository');
     }
 
-    // Получаем из локальной базы с фильтрацией
+    // Если сервер недоступен, получаем из локальной базы с фильтрацией
     developer.log('💾 Поиск в локальной базе', name: 'NetworkTransactionRepository');
     final localTransactions = await _databaseService.getTransactionsByDateRange(
       startDate: dateFrom,
@@ -92,24 +179,22 @@ class NetworkTransactionRepository implements TransactionRepository {
       isIncome: isIncome,
     );
 
-    developer.log('📊 Найдено ${localTransactions.length} транзакций', name: 'NetworkTransactionRepository');
-
+    developer.log('📊 Найдено ${localTransactions.length} транзакций в локальной базе', name: 'NetworkTransactionRepository');
     return await Future.wait(localTransactions.map(_mapEntityToResponse));
   }
 
   @override
   Future<TransactionResponce> addTransaction(TransactionRequest request) async {
+    await _ensureInitialized();
+    
     developer.log(
       '➕ Добавление новой транзакции: ${request.amount} ${request.transactionDate}',
       name: 'NetworkTransactionRepository',
     );
-
-    // Создаем временный ID для локального хранения
-    final tempId = DateTime.now().millisecondsSinceEpoch;
     
-    // Сначала сохраняем локально
+    // Сначала сохраняем локально с ID = 0 для автогенерации
     developer.log('💾 Сохранение транзакции локально', name: 'NetworkTransactionRepository');
-    final entity = _mapRequestToEntity(request, tempId);
+    final entity = _mapRequestToEntity(request, 0); // Используем 0 для автогенерации ID
     final localId = await _databaseService.addTransaction(entity);
     
     // Добавляем в бэкап для синхронизации
@@ -212,14 +297,54 @@ class NetworkTransactionRepository implements TransactionRepository {
 
   // Вспомогательные методы для маппинга данных
   Future<TransactionResponce> _mapEntityToResponse(TransactionEntity entity) async {
-    // Получаем связанные сущности
-    final accountEntity = await _databaseService.getAccountById(entity.accountId);
-    final categoryEntity = await _databaseService.getCategoryById(entity.categoryId);
+    developer.log('🔄 Маппинг транзакции ID: ${entity.id}, accountId: ${entity.accountId}, categoryId: ${entity.categoryId}', name: 'NetworkTransactionRepository');
     
-    if (accountEntity == null || categoryEntity == null) {
-      throw Exception('Account or Category not found for transaction ${entity.id}');
+    // Получаем связанные сущности
+    AccountEntity? accountEntity = await _databaseService.getAccountById(entity.accountId);
+    CategoryEntity? categoryEntity = await _databaseService.getCategoryById(entity.categoryId);
+    
+    // Если счет не найден, создаем базовый
+    if (accountEntity == null) {
+      developer.log('⚠️ Счет ${entity.accountId} не найден, создаем базовый для транзакции ${entity.id}', name: 'NetworkTransactionRepository');
+      accountEntity = AccountEntity(
+        id: 0, // Используем 0 для автогенерации ID в ObjectBox
+        name: 'Счет ${entity.accountId}',
+        balance: '0.00',
+        currency: 'RUB',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      final newAccountId = await _databaseService.addAccount(accountEntity);
+      accountEntity = await _databaseService.getAccountById(newAccountId);
+      if (accountEntity == null) {
+        throw Exception('Failed to create account for transaction ${entity.id}');
+      }
     }
 
+    // Если категория не найдена, создаем базовую
+    if (categoryEntity == null) {
+      developer.log('⚠️ Категория ${entity.categoryId} не найдена, создаем базовую для транзакции ${entity.id}', name: 'NetworkTransactionRepository');
+      
+      // Определяем тип категории по сумме (положительная = доход)
+      final amount = double.tryParse(entity.amount) ?? 0.0;
+      final isIncome = amount > 0;
+      
+      categoryEntity = CategoryEntity(
+        id: 0, // Используем 0 для автогенерации ID в ObjectBox
+        name: isIncome ? 'Доход' : 'Расход',
+        emoji: isIncome ? '💰' : '💸',
+        isIncome: isIncome,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      final newCategoryId = await _databaseService.addCategory(categoryEntity);
+      categoryEntity = await _databaseService.getCategoryById(newCategoryId);
+      if (categoryEntity == null) {
+        throw Exception('Failed to create category for transaction ${entity.id}');
+      }
+    }
+
+    developer.log('✅ Маппинг завершен для транзакции ${entity.id}', name: 'NetworkTransactionRepository');
     return TransactionResponce(
       id: entity.id,
       account: _mapAccountEntityToBrief(accountEntity),
@@ -286,5 +411,95 @@ class NetworkTransactionRepository implements TransactionRepository {
       emoji: categoryEntity.emoji,
       isIncome: categoryEntity.isIncome,
     );
+  }
+
+  /// Парсим транзакцию с сервера в TransactionResponce
+  Future<TransactionResponce?> _parseServerTransactionToResponse(Map<String, dynamic> transactionJson) async {
+    try {
+      final transactionId = transactionJson['id'];
+      final accountId = transactionJson['accountId'];
+      final categoryId = transactionJson['categoryId'];
+      final amount = transactionJson['amount']?.toString() ?? '0.00';
+      final transactionDate = DateTime.parse(transactionJson['transactionDate'] ?? DateTime.now().toIso8601String());
+      final comment = transactionJson['comment']?.toString();
+      final createdAt = DateTime.parse(transactionJson['createdAt'] ?? DateTime.now().toIso8601String());
+      final updatedAt = DateTime.parse(transactionJson['updatedAt'] ?? DateTime.now().toIso8601String());
+
+      // Получаем связанные сущности
+      AccountEntity? accountEntity = await _databaseService.getAccountById(accountId);
+      
+      // Сначала пытаемся найти категорию по ID
+      CategoryEntity? categoryEntity = await _databaseService.getCategoryById(categoryId);
+      
+      // Если не найдена по ID, ищем среди всех категорий по серверному ID через комментарий или другим способом
+      if (categoryEntity == null) {
+        developer.log('⚠️ Категория с ID $categoryId не найдена, ищем среди всех категорий', name: 'NetworkTransactionRepository');
+        final allCategories = await _databaseService.getAllCategories();
+        
+        // Определяем тип категории по сумме (положительная = доход)
+        final isIncome = double.tryParse(amount) != null && double.parse(amount) > 0;
+        
+        // Ищем подходящую категорию по типу (доход/расход)
+        for (final cat in allCategories) {
+          if (cat.isIncome == isIncome) {
+            categoryEntity = cat;
+            developer.log('✅ Найдена подходящая категория: ${cat.name} (ID: ${cat.id})', name: 'NetworkTransactionRepository');
+            break;
+          }
+        }
+      }
+
+      // Если счет не найден, создаем базовый
+      if (accountEntity == null) {
+        developer.log('⚠️ Счет $accountId не найден, создаем базовый', name: 'NetworkTransactionRepository');
+        accountEntity = AccountEntity(
+          id: 0, // Используем 0 для автогенерации ID в ObjectBox
+          name: 'Счет $accountId',
+          balance: '0.00',
+          currency: 'RUB',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        final newAccountId = await _databaseService.addAccount(accountEntity);
+        accountEntity = await _databaseService.getAccountById(newAccountId);
+        if (accountEntity == null) {
+          throw Exception('Failed to create account');
+        }
+      }
+
+      // Если категория все еще не найдена, создаем базовую
+      if (categoryEntity == null) {
+        developer.log('⚠️ Категория все еще не найдена, создаем базовую', name: 'NetworkTransactionRepository');
+        // Определяем тип категории по сумме (положительная = доход)
+        final isIncome = double.tryParse(amount) != null && double.parse(amount) > 0;
+        categoryEntity = CategoryEntity(
+          id: 0, // Используем 0 для автогенерации ID в ObjectBox
+          name: isIncome ? 'Доход' : 'Расход',
+          emoji: isIncome ? '💰' : '💸',
+          isIncome: isIncome,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        final newCategoryId = await _databaseService.addCategory(categoryEntity);
+        categoryEntity = await _databaseService.getCategoryById(newCategoryId);
+        if (categoryEntity == null) {
+          throw Exception('Failed to create category');
+        }
+      }
+
+      return TransactionResponce(
+        id: transactionId,
+        account: _mapAccountEntityToBrief(accountEntity),
+        category: _mapCategoryEntityToModel(categoryEntity),
+        amount: amount,
+        transactionDate: transactionDate,
+        comment: comment,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
+    } catch (e) {
+      developer.log('❌ Ошибка парсинга транзакции: $e', name: 'NetworkTransactionRepository');
+      return null;
+    }
   }
 } 
