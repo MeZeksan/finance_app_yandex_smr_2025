@@ -13,7 +13,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import '../widgets/balance_chart.dart';
-import '../../data/repositoryI/mock_balance_data.dart';
+import '../../data/repositoryI/network_bank_account_repository.dart';
+import '../../data/models/balance_data/balance_data.dart';
 
 @RoutePage()
 class AccountScreen extends StatelessWidget {
@@ -43,6 +44,7 @@ class _AccountViewState extends State<AccountView> with SingleTickerProviderStat
   late Animation<double> _fadeAnimation;
   StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
   DateTime? _lastShakeTime;
+  List<BalanceData> _balanceData = [];
   
   @override
   void initState() {
@@ -60,6 +62,9 @@ class _AccountViewState extends State<AccountView> with SingleTickerProviderStat
     
     // Подписка на события акселерометра
     _startListeningAccelerometer();
+    
+    // Загружаем данные графика
+    _loadBalanceData();
   }
   
   @override
@@ -101,6 +106,20 @@ class _AccountViewState extends State<AccountView> with SingleTickerProviderStat
         _animationController.forward();
       }
     });
+  }
+  
+
+  
+  Future<void> _loadBalanceData() async {
+    final repository = ServiceLocator.bankAccountRepository;
+    if (repository is NetworkBankAccountRepository) {
+      final balanceData = await repository.getBalanceData();
+      if (mounted) {
+        setState(() {
+          _balanceData = balanceData;
+        });
+      }
+    }
   }
   
   void _showEditDialog(BuildContext context, AccountState state) {
@@ -389,7 +408,7 @@ class _AccountViewState extends State<AccountView> with SingleTickerProviderStat
                     SizedBox(
                       height: MediaQuery.of(context).size.height * 0.35,
                       child: BalanceChart(
-                        balanceData: MockBalanceData.getMockDataExtended(),
+                        balanceData: _balanceData,
                       ),
                     ),
                   ],

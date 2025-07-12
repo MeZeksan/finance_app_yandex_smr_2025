@@ -11,6 +11,7 @@ import 'package:finance_app_yandex_smr_2025/features/account/data/models/account
 import 'package:finance_app_yandex_smr_2025/features/account/data/models/stat_item/stat_item.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/domain/repository/bank_account_repository.dart';
 import 'package:finance_app_yandex_smr_2025/core/database/entities/account_entity.dart';
+import 'package:finance_app_yandex_smr_2025/features/account/data/models/balance_data/balance_data.dart';
 import 'dart:developer' as developer;
 
 class NetworkBankAccountRepository implements BankAccountRepository {
@@ -34,35 +35,76 @@ class NetworkBankAccountRepository implements BankAccountRepository {
       developer.log('📵 Нет подключения к сети', name: 'NetworkBankAccountRepository');
     }
 
-    // Ищем в локальной базе
+    // ВСЕГДА проверяем сервер в первую очередь если есть сеть
+    if (_networkService.isConnected) {
+      developer.log('🌐 Запрос всех счетов с сервера: GET /accounts', name: 'NetworkBankAccountRepository');
+      try {
+        final response = await _apiClient.get('/accounts');
+        if (response.statusCode == 200 && response.data != null) {
+          developer.log('✅ Получен ответ от сервера: ${response.data}', name: 'NetworkBankAccountRepository');
+          
+          // API возвращает массив счетов напрямую
+          final accountsData = response.data as List<dynamic>;
+          
+          if (accountsData.isNotEmpty) {
+            // Ищем нужный счет по ID или берем первый
+            final accountData = accountsData.first as Map<String, dynamic>;
+            
+            developer.log('📊 Счет с сервера: ID=${accountData['id']}, name="${accountData['name']}", balance=${accountData['balance']}', name: 'NetworkBankAccountRepository');
+            developer.log('💰 ВНИМАНИЕ: Баланс с сервера = ${accountData['balance']} ${accountData['currency']}', name: 'NetworkBankAccountRepository');
+            
+            // Создаем объект AccountResponce с реальными данными сервера
+            final accountResponse = AccountResponce(
+              id: accountData['id'],
+              name: accountData['name'] ?? 'Основной счет',
+              balance: accountData['balance']?.toString() ?? '0.00', // Принудительно конвертируем в строку
+              currency: accountData['currency'] ?? 'RUB',
+              incomeStats: StatItem(
+                categoryId: 1,
+                categoryName: 'Доходы',
+                emoji: '💰',
+                amount: '0.00',
+              ),
+              expenseStats: StatItem(
+                categoryId: 2,
+                categoryName: 'Расходы',
+                emoji: '💸',
+                amount: '0.00',
+              ),
+              createdAt: DateTime.parse(accountData['createdAt'] ?? DateTime.now().toIso8601String()),
+              updatedAt: DateTime.parse(accountData['updatedAt'] ?? DateTime.now().toIso8601String()),
+            );
+            
+            developer.log('✅ Счет получен с сервера: ${accountResponse.name} (${accountResponse.balance} ${accountResponse.currency})', name: 'NetworkBankAccountRepository');
+            developer.log('💳 РЕЗУЛЬТАТ: Возвращаем баланс = ${accountResponse.balance}', name: 'NetworkBankAccountRepository');
+            
+            // Пытаемся обновить локальную базу новыми данными (в отдельном блоке)
+            try {
+              await _saveAccountToLocal(accountResponse);
+            } catch (saveError) {
+              developer.log('⚠️ Ошибка сохранения в локальную базу (не критично): $saveError', name: 'NetworkBankAccountRepository');
+            }
+            
+            // ВАЖНО: Возвращаем данные с сервера в любом случае
+            developer.log('🎯 Возвращаем РЕАЛЬНЫЕ данные с сервера: баланс=${accountResponse.balance}', name: 'NetworkBankAccountRepository');
+            return accountResponse;
+          } else {
+            developer.log('❌ Сервер вернул пустой массив счетов', name: 'NetworkBankAccountRepository');
+          }
+        } else {
+          developer.log('❌ Сервер вернул статус: ${response.statusCode}', name: 'NetworkBankAccountRepository');
+        }
+      } catch (e) {
+        developer.log('❌ Ошибка при запросе к серверу: $e', name: 'NetworkBankAccountRepository');
+      }
+    }
+
+    // Если сервер недоступен, ищем в локальной базе
     developer.log('💾 Поиск в локальной базе', name: 'NetworkBankAccountRepository');
     final localAccount = await _databaseService.getAccountById(accountId);
     if (localAccount != null) {
       developer.log('✅ Счет найден в локальной базе: ${localAccount.name}', name: 'NetworkBankAccountRepository');
       return await _mapEntityToResponse(localAccount);
-    }
-
-    developer.log('❌ Счет не найден в локальной базе', name: 'NetworkBankAccountRepository');
-
-    // Если нет в локальной базе и есть сеть, запрашиваем с сервера
-    if (_networkService.isConnected) {
-      developer.log('🌐 Запрос счета с сервера: GET /accounts/$accountId', name: 'NetworkBankAccountRepository');
-      try {
-        final response = await _apiClient.get('/accounts/$accountId');
-        if (response.statusCode == 200 && response.data != null) {
-          final accountData = response.data as Map<String, dynamic>;
-          final accountResponse = AccountResponce.fromJson(accountData);
-          
-          developer.log('✅ Счет получен с сервера: ${accountResponse.name}', name: 'NetworkBankAccountRepository');
-          // Сохраняем в локальную базу
-          await _saveAccountToLocal(accountResponse);
-          return accountResponse;
-        } else {
-          developer.log('❌ Сервер вернул статус: ${response.statusCode}', name: 'NetworkBankAccountRepository');
-        }
-      } catch (e) {
-        developer.log('❌ Ошибка при получении счета с сервера: $e', name: 'NetworkBankAccountRepository');
-      }
     }
 
     // Проверяем, есть ли вообще какие-то счета в базе
@@ -307,8 +349,13 @@ class NetworkBankAccountRepository implements BankAccountRepository {
   }
 
   Future<void> _saveAccountToLocal(AccountResponce account) async {
+    developer.log('💾 Сохраняем в локальную базу: ID=${account.id}, баланс=${account.balance}', name: 'NetworkBankAccountRepository');
+    
+    // Сначала проверяем, есть ли уже такой счет
+    final existingAccount = await _databaseService.getAccountById(account.id);
+    
     final entity = AccountEntity(
-      id: account.id,
+      id: existingAccount != null ? account.id : 0, // Используем 0 для новых записей
       name: account.name,
       balance: account.balance,
       currency: account.currency,
@@ -317,6 +364,7 @@ class NetworkBankAccountRepository implements BankAccountRepository {
     );
     
     await _databaseService.addAccount(entity);
+    developer.log('✅ Счет сохранен в локальную базу с балансом: ${entity.balance}', name: 'NetworkBankAccountRepository');
   }
 
   Future<void> _updateLocalAccounts(List<AccountResponce> accounts) async {
@@ -347,5 +395,89 @@ class NetworkBankAccountRepository implements BankAccountRepository {
       'changeTimestamp': DateTime.now().toIso8601String(),
       'createdAt': DateTime.now().toIso8601String(),
     };
+  }
+
+  /// Получаем данные для графика баланса с сервера
+  Future<List<BalanceData>> getBalanceData() async {
+    developer.log('📊 Создаем базовые данные для графика (пока без транзакций)', name: 'NetworkBankAccountRepository');
+    
+    // Пока создаем простые данные для демонстрации
+    // Позже можно будет подключить правильный endpoint для транзакций
+    final List<BalanceData> balanceData = [
+      BalanceData(
+        date: DateTime.now().subtract(Duration(days: 2)),
+        amount: 500.0,
+        type: 'income',
+      ),
+      BalanceData(
+        date: DateTime.now().subtract(Duration(days: 1)),
+        amount: 150.0,
+        type: 'expense',
+      ),
+      BalanceData(
+        date: DateTime.now(),
+        amount: 50.0,
+        type: 'expense',
+      ),
+    ];
+    
+    developer.log('📈 Создано ${balanceData.length} точек данных для графика', name: 'NetworkBankAccountRepository');
+    return balanceData;
+  }
+
+  /// Отправляем тестовые транзакции на сервер
+  Future<void> sendTestTransactions() async {
+    if (!_networkService.isConnected) {
+      developer.log('❌ Нет подключения к сети - не можем отправить тестовые транзакции', name: 'NetworkBankAccountRepository');
+      return;
+    }
+
+    developer.log('🧪 Отправка тестовых транзакций на сервер', name: 'NetworkBankAccountRepository');
+
+    final testTransactions = [
+      {
+        "accountId": 141,
+        "categoryId": 1,
+        "amount": "500.00",
+        "transactionDate": "2025-01-15T10:00:00.000Z",
+        "comment": "Зарплата за месяц"
+      },
+      {
+        "accountId": 141,
+        "categoryId": 2,
+        "amount": "-150.00",
+        "transactionDate": "2025-01-15T12:30:00.000Z",
+        "comment": "Покупка продуктов"
+      },
+      {
+        "accountId": 141,
+        "categoryId": 3,
+        "amount": "-50.00",
+        "transactionDate": "2025-01-15T14:15:00.000Z",
+        "comment": "Транспорт"
+      },
+    ];
+
+    for (int i = 0; i < testTransactions.length; i++) {
+      final transaction = testTransactions[i];
+      try {
+        developer.log('📤 Отправляем транзакцию ${i + 1}/3: ${transaction["comment"]} (${transaction["amount"]})', name: 'NetworkBankAccountRepository');
+        
+        final response = await _apiClient.post('/transactions', data: transaction);
+        
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          developer.log('✅ Транзакция ${i + 1} успешно отправлена: ${response.data}', name: 'NetworkBankAccountRepository');
+        } else {
+          developer.log('❌ Ошибка при отправке транзакции ${i + 1}: статус ${response.statusCode}', name: 'NetworkBankAccountRepository');
+        }
+      } catch (e) {
+        developer.log('❌ Исключение при отправке транзакции ${i + 1}: $e', name: 'NetworkBankAccountRepository');
+      }
+      
+      // Небольшая задержка между запросами
+      await Future.delayed(Duration(milliseconds: 500));
+    }
+    
+    developer.log('🏁 Завершена отправка тестовых транзакций', name: 'NetworkBankAccountRepository');
   }
 } 

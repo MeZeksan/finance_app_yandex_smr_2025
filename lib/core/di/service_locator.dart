@@ -9,7 +9,6 @@ import 'package:finance_app_yandex_smr_2025/features/account/domain/repository/b
 // Mock repositories
 import 'package:finance_app_yandex_smr_2025/features/transaction/data/repositoryI/mock_transaction_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/category/data/repositoryI/mock_category_repository.dart';
-import 'package:finance_app_yandex_smr_2025/features/account/data/repositoryI/mock_bank_account_repository.dart';
 
 // Network repositories
 import 'package:finance_app_yandex_smr_2025/features/transaction/data/repositoryI/network_transaction_repository.dart';
@@ -103,7 +102,7 @@ class ServiceLocator {
   static void _registerMockRepositories() {
     sl.registerSingleton<TransactionRepository>(MockTransactionRepository());
     sl.registerSingleton<CategoryRepository>(MockCategoryRepository());
-    sl.registerSingleton<BankAccountRepository>(MockBankAccountRepository());
+    sl.registerSingleton<BankAccountRepository>(NetworkBankAccountRepository());
   }
 
   static void _registerDatabaseRepositories() {
