@@ -108,65 +108,9 @@ class NetworkTransactionRepository implements TransactionRepository {
         developer.log('⚠️ Ошибка предзагрузки категорий через репозиторий: $e', name: 'NetworkTransactionRepository');
       }
 
-      // ВСЕГДА проверяем сервер в первую очередь для получения свежих данных
-      developer.log('🌐 Запрос транзакций с сервера: GET /transactions', name: 'NetworkTransactionRepository');
-      try {
-        final response = await _apiClient.get('/transactions');
-        if (response.statusCode == 200 && response.data != null) {
-          developer.log('✅ Получен ответ от сервера: транзакций найдено', name: 'NetworkTransactionRepository');
-          
-          List<dynamic> transactionsData;
-          if (response.data is List) {
-            transactionsData = response.data as List<dynamic>;
-          } else if (response.data is Map && response.data['data'] != null) {
-            transactionsData = response.data['data'] as List<dynamic>;
-          } else {
-            developer.log('❌ Неожиданный формат ответа от сервера', name: 'NetworkTransactionRepository');
-            transactionsData = [];
-          }
-
-          if (transactionsData.isNotEmpty) {
-            developer.log('📊 Получено ${transactionsData.length} транзакций с сервера', name: 'NetworkTransactionRepository');
-            
-            // Сохраняем все транзакции в локальную базу и фильтруем нужные
-            final List<TransactionResponce> filteredTransactions = [];
-            
-            for (final transactionJson in transactionsData) {
-              if (transactionJson is Map<String, dynamic>) {
-                try {
-                  // Создаем TransactionResponce из данных сервера
-                  final serverTransaction = await _parseServerTransactionToResponse(transactionJson);
-                  if (serverTransaction != null) {
-                    // Сохраняем в локальную базу
-                    await _saveTransactionToLocal(serverTransaction);
-                    
-                    // Проверяем фильтры
-                    final transactionDate = serverTransaction.transactionDate;
-                    final isInDateRange = transactionDate.isAfter(dateFrom.subtract(const Duration(seconds: 1))) &&
-                        transactionDate.isBefore(dateTo.add(const Duration(seconds: 1)));
-                    final isCorrectType = serverTransaction.category.isIncome == isIncome;
-                    
-                    if (isInDateRange && isCorrectType) {
-                      filteredTransactions.add(serverTransaction);
-                    }
-                  }
-                } catch (e) {
-                  developer.log('⚠️ Ошибка парсинга транзакции: $e', name: 'NetworkTransactionRepository');
-                }
-              }
-            }
-            
-            developer.log('📈 Отфильтровано ${filteredTransactions.length} транзакций по заданным критериям', name: 'NetworkTransactionRepository');
-            return filteredTransactions;
-          } else {
-            developer.log('⚠️ Сервер вернул пустой список транзакций', name: 'NetworkTransactionRepository');
-          }
-        } else {
-          developer.log('❌ Сервер вернул статус: ${response.statusCode}', name: 'NetworkTransactionRepository');
-        }
-      } catch (e) {
-        developer.log('❌ Ошибка при получении транзакций с сервера: $e', name: 'NetworkTransactionRepository');
-      }
+      // ПРИМЕЧАНИЕ: GET /transactions не поддерживается сервером (405 Method Not Allowed)
+      // Поэтому используем только локальную базу данных для отображения
+      developer.log('⚠️ GET /transactions не поддерживается сервером, используем только локальную базу', name: 'NetworkTransactionRepository');
     } else {
       developer.log('📵 Нет подключения к сети', name: 'NetworkTransactionRepository');
     }
@@ -299,9 +243,36 @@ class NetworkTransactionRepository implements TransactionRepository {
   Future<TransactionResponce> _mapEntityToResponse(TransactionEntity entity) async {
     developer.log('🔄 Маппинг транзакции ID: ${entity.id}, accountId: ${entity.accountId}, categoryId: ${entity.categoryId}', name: 'NetworkTransactionRepository');
     
-    // Получаем связанные сущности
+    // Получаем связанные сущности - сначала по ID, потом по другим критериям
     AccountEntity? accountEntity = await _databaseService.getAccountById(entity.accountId);
+    
+    // Если не найден по ID, ищем первый доступный счет
+    if (accountEntity == null) {
+      final allAccounts = await _databaseService.getAllAccounts();
+      if (allAccounts.isNotEmpty) {
+        accountEntity = allAccounts.first;
+        developer.log('⚠️ Счет ${entity.accountId} не найден по ID, используем первый доступный: ${accountEntity.name}', name: 'NetworkTransactionRepository');
+      }
+    }
+    
     CategoryEntity? categoryEntity = await _databaseService.getCategoryById(entity.categoryId);
+    
+    // Если не найдена по ID, ищем среди всех категорий
+    if (categoryEntity == null) {
+      final allCategories = await _databaseService.getAllCategories();
+      // Определяем тип транзакции по сумме
+      final amount = double.tryParse(entity.amount) ?? 0.0;
+      final isIncome = amount > 0;
+      
+      // Ищем подходящую категорию по типу
+      for (final cat in allCategories) {
+        if (cat.isIncome == isIncome) {
+          categoryEntity = cat;
+          developer.log('⚠️ Категория ${entity.categoryId} не найдена по ID, используем подходящую: ${cat.name}', name: 'NetworkTransactionRepository');
+          break;
+        }
+      }
+    }
     
     // Если счет не найден, создаем базовый
     if (accountEntity == null) {
