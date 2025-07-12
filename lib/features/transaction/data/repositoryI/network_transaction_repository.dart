@@ -12,6 +12,7 @@ import 'package:finance_app_yandex_smr_2025/core/database/entities/category_enti
 import 'package:finance_app_yandex_smr_2025/features/account/data/models/account_brief/account_brief.dart';
 import 'package:finance_app_yandex_smr_2025/features/category/data/models/category.dart';
 import 'package:finance_app_yandex_smr_2025/features/category/data/repositoryI/network_category_repository.dart';
+import 'package:finance_app_yandex_smr_2025/features/account/data/repositoryI/network_bank_account_repository.dart';
 import 'dart:developer' as developer;
 
 class NetworkTransactionRepository implements TransactionRepository {
@@ -19,6 +20,7 @@ class NetworkTransactionRepository implements TransactionRepository {
   final ApiClient _apiClient = ApiClient();
   final NetworkService _networkService = NetworkService();
   final BackupService _backupService = BackupService();
+  final NetworkBankAccountRepository _accountRepository = NetworkBankAccountRepository();
   
   static bool _initialized = false;
   
@@ -152,7 +154,18 @@ class NetworkTransactionRepository implements TransactionRepository {
     // Если есть сеть, пытаемся сразу синхронизировать
     if (_networkService.isConnected) {
       developer.log('📡 Синхронизация с сервером', name: 'NetworkTransactionRepository');
-      await _backupService.syncPendingOperations();
+      final syncSuccess = await _backupService.syncPendingOperations();
+      
+      // Если синхронизация прошла успешно, обновляем баланс
+      if (syncSuccess) {
+        developer.log('💰 Обновляем баланс после успешного создания транзакции', name: 'NetworkTransactionRepository');
+        try {
+          await _accountRepository.refreshBalance(request.accountId);
+          developer.log('✅ Баланс успешно обновлен', name: 'NetworkTransactionRepository');
+        } catch (e) {
+          developer.log('⚠️ Ошибка при обновлении баланса: $e', name: 'NetworkTransactionRepository');
+        }
+      }
     } else {
       developer.log('📵 Нет подключения к сети, синхронизация отложена', name: 'NetworkTransactionRepository');
     }
@@ -190,7 +203,18 @@ class NetworkTransactionRepository implements TransactionRepository {
     // Если есть сеть, пытаемся сразу синхронизировать
     if (_networkService.isConnected) {
       developer.log('📡 Синхронизация с сервером', name: 'NetworkTransactionRepository');
-      await _backupService.syncPendingOperations();
+      final syncSuccess = await _backupService.syncPendingOperations();
+      
+      // Если синхронизация прошла успешно, обновляем баланс
+      if (syncSuccess) {
+        developer.log('💰 Обновляем баланс после обновления транзакции', name: 'NetworkTransactionRepository');
+        try {
+          await _accountRepository.refreshBalance(request.accountId);
+          developer.log('✅ Баланс успешно обновлен', name: 'NetworkTransactionRepository');
+        } catch (e) {
+          developer.log('⚠️ Ошибка при обновлении баланса: $e', name: 'NetworkTransactionRepository');
+        }
+      }
     } else {
       developer.log('📵 Нет подключения к сети, синхронизация отложена', name: 'NetworkTransactionRepository');
     }
@@ -225,7 +249,23 @@ class NetworkTransactionRepository implements TransactionRepository {
       // Если есть сеть, пытаемся сразу синхронизировать
       if (_networkService.isConnected) {
         developer.log('📡 Синхронизация с сервером', name: 'NetworkTransactionRepository');
-        await _backupService.syncPendingOperations();
+        final syncSuccess = await _backupService.syncPendingOperations();
+        
+        // Если синхронизация прошла успешно, обновляем баланс
+        if (syncSuccess) {
+          developer.log('💰 Обновляем баланс после удаления транзакции', name: 'NetworkTransactionRepository');
+          try {
+            // Получаем информацию об удаленной транзакции для обновления правильного счета
+            // Поскольку транзакция уже удалена, используем все счета
+            final accounts = await _databaseService.getAllAccounts();
+            if (accounts.isNotEmpty) {
+              await _accountRepository.refreshBalance(accounts.first.id);
+              developer.log('✅ Баланс успешно обновлен', name: 'NetworkTransactionRepository');
+            }
+          } catch (e) {
+            developer.log('⚠️ Ошибка при обновлении баланса: $e', name: 'NetworkTransactionRepository');
+          }
+        }
       } else {
         developer.log('📵 Нет подключения к сети, синхронизация отложена', name: 'NetworkTransactionRepository');
       }

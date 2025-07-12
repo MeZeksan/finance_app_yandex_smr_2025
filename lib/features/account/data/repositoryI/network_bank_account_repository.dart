@@ -423,6 +423,57 @@ class NetworkBankAccountRepository implements BankAccountRepository {
     return balanceData;
   }
 
+  /// Принудительное обновление баланса с сервера
+  Future<void> refreshBalance(int accountId) async {
+    developer.log('🔄 Принудительное обновление баланса для счета $accountId', name: 'NetworkBankAccountRepository');
+    
+    if (!_networkService.isConnected) {
+      developer.log('📵 Нет подключения к сети - не можем обновить баланс', name: 'NetworkBankAccountRepository');
+      return;
+    }
+
+    try {
+      final response = await _apiClient.get('/accounts');
+      if (response.statusCode == 200 && response.data != null) {
+        final accountsData = response.data as List<dynamic>;
+        
+        if (accountsData.isNotEmpty) {
+          final accountData = accountsData.first as Map<String, dynamic>;
+          
+          developer.log('💰 Обновленный баланс с сервера: ${accountData['balance']} ${accountData['currency']}', name: 'NetworkBankAccountRepository');
+          
+          // Создаем объект AccountResponce с обновленными данными
+          final accountResponse = AccountResponce(
+            id: accountData['id'],
+            name: accountData['name'] ?? 'Основной счет',
+            balance: accountData['balance']?.toString() ?? '0.00',
+            currency: accountData['currency'] ?? 'RUB',
+            incomeStats: StatItem(
+              categoryId: 1,
+              categoryName: 'Доходы',
+              emoji: '💰',
+              amount: '0.00',
+            ),
+            expenseStats: StatItem(
+              categoryId: 2,
+              categoryName: 'Расходы',
+              emoji: '💸',
+              amount: '0.00',
+            ),
+            createdAt: DateTime.parse(accountData['createdAt'] ?? DateTime.now().toIso8601String()),
+            updatedAt: DateTime.parse(accountData['updatedAt'] ?? DateTime.now().toIso8601String()),
+          );
+          
+          // Обновляем локальную базу
+          await _saveAccountToLocal(accountResponse);
+          developer.log('✅ Баланс обновлен и сохранен локально: ${accountResponse.balance}', name: 'NetworkBankAccountRepository');
+        }
+      }
+    } catch (e) {
+      developer.log('❌ Ошибка при обновлении баланса: $e', name: 'NetworkBankAccountRepository');
+    }
+  }
+
   /// Отправляем тестовые транзакции на сервер
   Future<void> sendTestTransactions() async {
     if (!_networkService.isConnected) {
