@@ -59,9 +59,37 @@ class MockBankAccountRepository implements BankAccountRepository {
   }
 
   @override
-  Future<AccountResponce?> getAccountById(int accountId) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    return _accounts[accountId];
+  Future<AccountResponce> getAccountById(int accountId) async {
+    // Симуляция задержки сети
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // Возвращаем заранее созданный счет или создаем дефолтный
+    final existingAccount = _accounts[accountId];
+    if (existingAccount != null) {
+      return existingAccount;
+    }
+    
+    // Создаем дефолтный счет для любого другого ID
+    return AccountResponce(
+      id: accountId,
+      name: 'Основной счет',
+      balance: '0.00',
+      currency: 'RUB',
+      incomeStats: StatItem(
+        categoryId: 1,
+        categoryName: 'Доходы',
+        emoji: '💰',
+        amount: '0.00',
+      ),
+      expenseStats: StatItem(
+        categoryId: 2,
+        categoryName: 'Расходы',
+        emoji: '💸',
+        amount: '0.00',
+      ),
+      createdAt: DateTime.now().subtract(const Duration(days: 30)),
+      updatedAt: DateTime.now(),
+    );
   }
 
   @override

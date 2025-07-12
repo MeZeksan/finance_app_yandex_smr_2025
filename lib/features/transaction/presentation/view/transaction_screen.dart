@@ -1,5 +1,5 @@
 import 'package:finance_app_yandex_smr_2025/features/history/presentation/view/history_screen.dart';
-import 'package:finance_app_yandex_smr_2025/features/transaction/data/repositoryI/mock_transaction_repository.dart';
+import 'package:finance_app_yandex_smr_2025/core/di/service_locator.dart';
 import 'package:finance_app_yandex_smr_2025/features/transaction/domain/repository/transaction_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/transaction/presentation/bloc/transaction.bloc.dart';
 
@@ -224,7 +224,7 @@ class TransactionsView extends StatelessWidget {
           final result = await TransactionScreen.show(
             context,
             isIncome,
-            MockTransactionRepository(),
+            ServiceLocator.transactionRepository,
           );
           if (result == true) {
             // Refresh transactions after creating new one

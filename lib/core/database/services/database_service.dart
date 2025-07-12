@@ -14,6 +14,8 @@ class DatabaseService {
 
   bool _isInitialized = false;
 
+  ObjectBox get objectBox => _objectBox;
+
   Future<void> initialize() async {
     if (_isInitialized) return;
     _objectBox = await ObjectBox.create();
@@ -65,7 +67,13 @@ class DatabaseService {
 
   // Transaction methods
   Future<List<TransactionEntity>> getAllTransactions() async {
-    return _objectBox.transactionBox.getAll();
+    final transactions = _objectBox.transactionBox.getAll();
+    // Инициализируем ToOne отношения для всех транзакций
+    for (final transaction in transactions) {
+      transaction.account.attach(_objectBox.store);
+      transaction.category.attach(_objectBox.store);
+    }
+    return transactions;
   }
 
   Future<List<TransactionEntity>> getTransactionsByDateRange({
@@ -80,6 +88,12 @@ class DatabaseService {
     
     try {
       final transactions = query.find();
+      
+      // Инициализируем ToOne отношения для всех транзакций
+      for (final transaction in transactions) {
+        transaction.account.attach(_objectBox.store);
+        transaction.category.attach(_objectBox.store);
+      }
       
       if (isIncome != null) {
         // Фильтрация по типу (доход/расход) через связанные категории
@@ -96,10 +110,28 @@ class DatabaseService {
   }
 
   Future<TransactionEntity?> getTransactionById(int id) async {
-    return _objectBox.transactionBox.get(id);
+    final transaction = _objectBox.transactionBox.get(id);
+    if (transaction != null) {
+      // Инициализируем ToOne отношения
+      transaction.account.attach(_objectBox.store);
+      transaction.category.attach(_objectBox.store);
+    }
+    return transaction;
   }
 
   Future<int> addTransaction(TransactionEntity transaction) async {
+    // Инициализируем ToOne отношения перед сохранением
+    transaction.account.attach(_objectBox.store);
+    transaction.category.attach(_objectBox.store);
+    
+    // Устанавливаем targetId если они не установлены
+    if (transaction.accountId > 0) {
+      transaction.account.targetId = transaction.accountId;
+    }
+    if (transaction.categoryId > 0) {
+      transaction.category.targetId = transaction.categoryId;
+    }
+    
     return _objectBox.transactionBox.put(transaction);
   }
 

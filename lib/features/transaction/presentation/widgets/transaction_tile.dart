@@ -1,28 +1,29 @@
+import 'package:finance_app_yandex_smr_2025/core/di/service_locator.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/data/models/account_brief/account_brief.dart';
-import 'package:finance_app_yandex_smr_2025/features/account/data/repositoryI/mock_bank_account_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/domain/repository/bank_account_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/category/data/models/category.dart';
-import 'package:finance_app_yandex_smr_2025/features/category/data/repositoryI/mock_category_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/category/domain/repositories/category_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/transaction/data/models/transaction/transaction_request/transaction_request.dart';
 import 'package:finance_app_yandex_smr_2025/features/transaction/data/models/transaction/transaction_responce/transaction_responce.dart';
-import 'package:finance_app_yandex_smr_2025/features/transaction/data/repositoryI/mock_transaction_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/transaction/domain/repository/transaction_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'dart:developer' as developer;
 
 class TransactionTile extends StatelessWidget {
   final TransactionResponce transaction;
+  final bool showDate;
   final bool isFirst;
   final bool isLast;
   final VoidCallback? onChanged;
 
   const TransactionTile({
     super.key,
-    required this.transaction, 
-    required this.isFirst, 
-    required this.isLast,
+    required this.transaction,
+    this.showDate = false,
+    this.isFirst = false,
+    this.isLast = false,
     this.onChanged,
   });
 
@@ -32,6 +33,8 @@ class TransactionTile extends StatelessWidget {
     final formatter = NumberFormat('#,##0', 'ru_RU');
     final formattedAmount = '${formatter.format(amount.round())} ₽';
     
+    final dateString = DateFormat('dd.MM.yyyy', 'ru_RU').format(transaction.transactionDate);
+    final timeString = DateFormat('HH:mm', 'ru_RU').format(transaction.transactionDate);
 
     return Container(
       decoration: const BoxDecoration(
@@ -76,8 +79,9 @@ class TransactionTile extends StatelessWidget {
               ),
               ],
             ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
+            trailing: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
                   formattedAmount,
@@ -86,15 +90,28 @@ class TransactionTile extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(width: 8),
-                const Icon(
-                  Icons.chevron_right,
-                  color: Colors.grey,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      showDate ? '$dateString $timeString' : timeString,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[500],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(
+                      Icons.chevron_right,
+                      color: Colors.grey,
+                      size: 16,
+                    ),
+                  ],
                 ),
               ],
             ),
             onTap: () async {
-              final result = await _showTransactionModal(context, transaction);
+              final result = await _showEditTransactionModal(context, transaction);
               if (result == true && onChanged != null) {
                 onChanged!();
               }
@@ -107,12 +124,12 @@ class TransactionTile extends StatelessWidget {
     );
   }
 
-  Future<bool?> _showTransactionModal(BuildContext context, TransactionResponce transaction) {
+  Future<bool?> _showEditTransactionModal(BuildContext context, TransactionResponce transaction) {
     return Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (context) => TransactionScreen.edit(
           transaction: transaction,
-          transactionRepository: MockTransactionRepository.instance,
+          transactionRepository: ServiceLocator.transactionRepository,
         ),
       ),
     );
@@ -139,14 +156,20 @@ class TransactionScreen extends StatefulWidget {
   static Future<bool?> show(
     BuildContext context,
     bool isIncome,
-    TransactionRepository repository,
-  ) {
+    TransactionRepository repository, {
+    TransactionResponce? transaction,
+  }) {
     return Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (context) => TransactionScreen.create(
-          isIncome: isIncome,
-          transactionRepository: MockTransactionRepository.instance,
-        ),
+        builder: (context) => transaction != null
+            ? TransactionScreen.edit(
+                transaction: transaction,
+                transactionRepository: repository,
+              )
+            : TransactionScreen.create(
+                isIncome: isIncome,
+                transactionRepository: repository,
+              ),
       ),
     );
   }
@@ -169,12 +192,14 @@ class _TransactionScreenState extends State<TransactionScreen> {
   bool _isLoading = false;
   bool _isSaving = false;
   
-  final BankAccountRepository _accountRepository = MockBankAccountRepository();
-  final CategoryRepository _categoryRepository = MockCategoryRepository();
+  late final BankAccountRepository _accountRepository;
+  late final CategoryRepository _categoryRepository;
 
   @override
   void initState() {
     super.initState();
+    _accountRepository = ServiceLocator.bankAccountRepository;
+    _categoryRepository = ServiceLocator.categoryRepository;
     _initializeData();
   }
 
@@ -196,6 +221,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
   }
 
   Future<void> _loadAccountsAndCategories() async {
+    developer.log('🔄 Загрузка данных для TransactionScreen (isIncome: ${widget.isIncome})', name: 'TransactionScreen');
+    
     setState(() {
       _isLoading = true;
     });
@@ -226,9 +253,13 @@ class _TransactionScreenState extends State<TransactionScreen> {
       }
 
       // Load categories based on transaction type
+      developer.log('📋 Загрузка категорий через ${_categoryRepository.runtimeType}', name: 'TransactionScreen');
+      
       final categoryEntities = widget.isIncome 
           ? await _categoryRepository.getIncomeCategories()
           : await _categoryRepository.getExpenseCategories();
+      
+      developer.log('📊 Получено ${categoryEntities.length} категорий ${widget.isIncome ? 'доходов' : 'расходов'}', name: 'TransactionScreen');
       
       _categories = categoryEntities.map((entity) => Category(
         id: entity.id,
@@ -237,7 +268,13 @@ class _TransactionScreenState extends State<TransactionScreen> {
         isIncome: entity.isIncome,
       )).toList();
 
+      // Логируем каждую категорию
+      for (final category in _categories) {
+        developer.log('📝 Категория: ID=${category.id}, ${category.name} ${category.emoji}', name: 'TransactionScreen');
+      }
+
     } catch (e) {
+      developer.log('❌ Ошибка загрузки данных: $e', name: 'TransactionScreen');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Ошибка загрузки данных: $e')),
@@ -395,7 +432,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
         accountId: _selectedAccount!.id,
         categoryId: _selectedCategory!.id,
         amount: amount.toStringAsFixed(2),
-        transactionDate: _selectedDate,
+        transactionDate: _selectedDate.toUtc(), // Преобразуем в UTC для сервера
         comment: _commentController.text.trim().isEmpty ? null : _commentController.text.trim(),
       );
 

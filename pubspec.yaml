@@ -29,6 +29,10 @@ dependencies:
   sensors_plus: ^6.1.1
   fl_chart: ^0.69.1
   
+  # HTTP and Network
+  dio: ^5.7.0
+  connectivity_plus: ^6.1.0
+  
   # Database
   objectbox: ^4.3.0
   objectbox_flutter_libs: ^4.3.0

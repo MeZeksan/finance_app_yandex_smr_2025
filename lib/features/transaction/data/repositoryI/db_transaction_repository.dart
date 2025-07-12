@@ -15,14 +15,16 @@ class DbTransactionRepository implements TransactionRepository {
   Future<TransactionResponce> addTransaction(TransactionRequest request) async {
     final now = DateTime.now();
     final transaction = TransactionEntity(
-      accountId: request.accountId,
-      categoryId: request.categoryId,
       amount: request.amount,
       transactionDate: request.transactionDate,
       comment: request.comment,
       createdAt: now,
       updatedAt: now,
     );
+    
+    // Устанавливаем связи
+    transaction.accountId = request.accountId;
+    transaction.categoryId = request.categoryId;
     
     final id = await _databaseService.addTransaction(transaction);
     
@@ -152,14 +154,16 @@ class DbTransactionRepository implements TransactionRepository {
     
     final updatedTransaction = TransactionEntity(
       id: transactionId,
-      accountId: request.accountId,
-      categoryId: request.categoryId,
       amount: request.amount,
       transactionDate: request.transactionDate,
       comment: request.comment,
       createdAt: existingTransaction.createdAt,
       updatedAt: DateTime.now(),
     );
+    
+    // Устанавливаем связи
+    updatedTransaction.accountId = request.accountId;
+    updatedTransaction.categoryId = request.categoryId;
     
     await _databaseService.addTransaction(updatedTransaction);
     
