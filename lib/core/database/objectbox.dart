@@ -12,6 +12,9 @@ import 'package:finance_app_yandex_smr_2025/core/database/entities/backup_operat
 class ObjectBox {
   /// The Store of this app.
   late final Store _store;
+  
+  /// Getter для доступа к store из других классов
+  Store get store => _store;
 
   /// A Box of Account entities.
   late final Box<AccountEntity> accountBox;

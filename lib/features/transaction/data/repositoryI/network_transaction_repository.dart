@@ -108,9 +108,8 @@ class NetworkTransactionRepository implements TransactionRepository {
         developer.log('⚠️ Ошибка предзагрузки категорий через репозиторий: $e', name: 'NetworkTransactionRepository');
       }
 
-      // ПРИМЕЧАНИЕ: GET /transactions не поддерживается сервером (405 Method Not Allowed)
-      // Поэтому используем только локальную базу данных для отображения
-      developer.log('⚠️ GET /transactions не поддерживается сервером, используем только локальную базу', name: 'NetworkTransactionRepository');
+      // Используем локальную базу данных для отображения транзакций
+      developer.log('💾 Используем локальную базу для получения транзакций', name: 'NetworkTransactionRepository');
     } else {
       developer.log('📵 Нет подключения к сети', name: 'NetworkTransactionRepository');
     }
@@ -340,9 +339,11 @@ class NetworkTransactionRepository implements TransactionRepository {
       updatedAt: now,
     );
     
-    // Устанавливаем связи
+    // Устанавливаем ID для связей - это будет использоваться в DatabaseService
     entity.accountId = request.accountId;
     entity.categoryId = request.categoryId;
+    
+    developer.log('🔗 Создана TransactionEntity: ID=$id, accountId=${request.accountId}, categoryId=${request.categoryId}', name: 'NetworkTransactionRepository');
     
     return entity;
   }
@@ -357,9 +358,11 @@ class NetworkTransactionRepository implements TransactionRepository {
       updatedAt: transaction.updatedAt,
     );
     
-    // Устанавливаем связи
+    // Устанавливаем ID для связей
     entity.accountId = transaction.account.id;
     entity.categoryId = transaction.category.id;
+    
+    developer.log('💾 Сохранение локально: TransactionID=${transaction.id}, accountId=${transaction.account.id}, categoryId=${transaction.category.id}', name: 'NetworkTransactionRepository');
     
     await _databaseService.addTransaction(entity);
   }
