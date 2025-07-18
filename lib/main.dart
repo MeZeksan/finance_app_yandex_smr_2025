@@ -47,7 +47,7 @@ class _MyAppState extends State<MyApp> {
           darkTheme: _themeService.getDarkTheme(),
           themeMode: _themeService.useSystemTheme 
             ? ThemeMode.system 
-            : ThemeMode.light,
+            : (_themeService.isDarkTheme ? ThemeMode.dark : ThemeMode.light),
           routerConfig: appRouter.config(),
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,

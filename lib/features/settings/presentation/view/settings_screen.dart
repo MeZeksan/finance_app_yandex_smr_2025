@@ -26,12 +26,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final double statusBarHeight = MediaQuery.of(context).padding.top;
     final double topPadding = statusBarHeight + 16.0;
 
-    return Scaffold(
-      backgroundColor: _themeService.backgroundColor,
-      body: ListenableBuilder(
-        listenable: _themeService,
-        builder: (context, child) {
-          return Column(
+    return ListenableBuilder(
+      listenable: _themeService,
+      builder: (context, child) {
+        return Scaffold(
+          backgroundColor: _themeService.backgroundColor,
+          body: Column(
             children: [
               // Header
               Container(
@@ -55,9 +55,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
 
               // Content
-              Column(
-                children: [
-                                      Container(
+              Expanded(
+                child: Column(
+                  children: [
+                    Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
                         color: _themeService.containerColor,
@@ -65,12 +66,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       child: Column(
                         children: [
                           Container(
-                            padding: const EdgeInsets.only(left: 16, right: 16, top:8, bottom: 8),
+                            padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 8),
                             width: double.infinity,
                             child: Row(
                               children: [
                                 Text(
-                                  'Тёмная тема',
+                                  'Системная тема',
                                   style: TextStyle(
                                     color: _themeService.textColor,
                                     fontSize: 16,
@@ -87,10 +88,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ],
                             ),
                           ),
+                          if (!_themeService.useSystemTheme)
+                            Container(
+                              padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 8),
+                              width: double.infinity,
+                              child: Row(
+                                children: [
+                                  Text(
+                                    'Тёмная тема',
+                                    style: TextStyle(
+                                      color: _themeService.textColor,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  Switch(
+                                    value: _themeService.isDarkTheme,
+                                    onChanged: (value) {
+                                      _themeService.setDarkTheme(value);
+                                    },
+                                    activeColor: _themeService.headerColor,
+                                  ),
+                                ],
+                              ),
+                            ),
                           Divider(
                             height: 1,
                             thickness: 1,
-                            color: Colors.grey.shade300,
+                            color: _themeService.isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300,
                           ),
                           Container(
                             width: double.infinity,
@@ -113,7 +138,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     decoration: BoxDecoration(
                                       color: _themeService.primaryColor,
                                       borderRadius: BorderRadius.circular(4),
-                                      border: Border.all(color: Colors.grey.shade300),
+                                      border: Border.all(
+                                        color: _themeService.isDarkMode 
+                                          ? Colors.grey.shade600 
+                                          : Colors.grey.shade300
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -129,25 +158,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ],
                       ),
                     ),
-                  
-                  const Divider(height: 1, thickness: 1, color: Color(0xFFE6E6E6)),
-                  _buildSettingTile('Звуки', Icons.volume_up),
-                  const Divider(height: 1, thickness: 1, color: Color(0xFFE6E6E6)),
-                  _buildSettingTile('Хаптики', Icons.vibration),
-                  const Divider(height: 1, thickness: 1, color: Color(0xFFE6E6E6)),
-                  _buildSettingTile('Код пароль', Icons.lock),
-                  const Divider(height: 1, thickness: 1, color: Color(0xFFE6E6E6)),
-                  _buildSettingTile('Синхронизация', Icons.sync),
-                  const Divider(height: 1, thickness: 1, color: Color(0xFFE6E6E6)),
-                  _buildSettingTile('Язык', Icons.language),
-                  const Divider(height: 1, thickness: 1, color: Color(0xFFE6E6E6)),
-                  _buildSettingTile('О программе', Icons.info_outline),
-                ],
+                    
+                    const SizedBox(height: 16),
+                    
+                    // Other settings
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: _themeService.containerColor,
+                      ),
+                      child: Column(
+                        children: [
+                          _buildSettingTile('Звуки', Icons.volume_up),
+                          Divider(
+                            height: 1, 
+                            thickness: 1, 
+                            color: _themeService.isDarkMode ? Colors.grey.shade700 : const Color(0xFFE6E6E6)
+                          ),
+                          _buildSettingTile('Хаптики', Icons.vibration),
+                          Divider(
+                            height: 1, 
+                            thickness: 1, 
+                            color: _themeService.isDarkMode ? Colors.grey.shade700 : const Color(0xFFE6E6E6)
+                          ),
+                          _buildSettingTile('Код пароль', Icons.lock),
+                          Divider(
+                            height: 1, 
+                            thickness: 1, 
+                            color: _themeService.isDarkMode ? Colors.grey.shade700 : const Color(0xFFE6E6E6)
+                          ),
+                          _buildSettingTile('Синхронизация', Icons.sync),
+                          Divider(
+                            height: 1, 
+                            thickness: 1, 
+                            color: _themeService.isDarkMode ? Colors.grey.shade700 : const Color(0xFFE6E6E6)
+                          ),
+                          _buildSettingTile('Язык', Icons.language),
+                          Divider(
+                            height: 1, 
+                            thickness: 1, 
+                            color: _themeService.isDarkMode ? Colors.grey.shade700 : const Color(0xFFE6E6E6)
+                          ),
+                          _buildSettingTile('О программе', Icons.info_outline),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -157,7 +219,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 16),
       child: Row(
         children: [
-          
+          Icon(
+            icon,
+            color: _themeService.textColor,
+            size: 24,
+          ),
+          const SizedBox(width: 16),
           Text(
             title,
             style: TextStyle(
@@ -183,7 +250,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Color pickerColor = _themeService.primaryColor;
         
         return AlertDialog(
-          title: const Text('Выберите основной цвет'),
+          backgroundColor: _themeService.isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
+          title: Text(
+            'Выберите основной цвет',
+            style: TextStyle(
+              color: _themeService.textColor,
+            ),
+          ),
           content: SingleChildScrollView(
             child: ColorPicker(
               pickerColor: pickerColor,
@@ -198,20 +271,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text('Отмена'),
+              child: Text(
+                'Отмена',
+                style: TextStyle(color: _themeService.textColor),
+              ),
             ),
             TextButton(
               onPressed: () {
                 _themeService.setPrimaryColor(pickerColor);
                 Navigator.of(context).pop();
               },
-              child: const Text('Выбрать'),
+              child: Text(
+                'Выбрать',
+                style: TextStyle(color: _themeService.primaryColor),
+              ),
             ),
           ],
         );
       },
     );
   }
-
-
 }
