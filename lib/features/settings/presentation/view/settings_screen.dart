@@ -33,7 +33,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           backgroundColor: _themeService.backgroundColor,
           body: Column(
             children: [
-              // Header
               Container(
                 alignment: Alignment.center,
                 width: double.infinity,
@@ -54,14 +53,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
 
-              // Content
+
               Expanded(
                 child: Column(
                   children: [
                     Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: _themeService.containerColor,
+                        color: Colors.transparent,
                       ),
                       child: Column(
                         children: [
@@ -88,7 +87,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ],
                             ),
                           ),
-                          if (!_themeService.useSystemTheme)
+                          if (!_themeService.useSystemTheme) ...[
+                            Divider(
+                              height: 1,
+                              thickness: 1,
+                              color: _themeService.isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300,
+                            ),
                             Container(
                               padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 8),
                               width: double.infinity,
@@ -112,6 +116,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ],
                               ),
                             ),
+                          ],
                           Divider(
                             height: 1,
                             thickness: 1,
@@ -159,13 +164,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                     
-                    const SizedBox(height: 16),
+                    Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: _themeService.isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300,
+                    ),
                     
-                    // Other settings
                     Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: _themeService.containerColor,
+                        color: Colors.transparent,
                       ),
                       child: Column(
                         children: [
@@ -219,12 +227,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 16),
       child: Row(
         children: [
-          Icon(
-            icon,
-            color: _themeService.textColor,
-            size: 24,
-          ),
-          const SizedBox(width: 16),
           Text(
             title,
             style: TextStyle(
