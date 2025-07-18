@@ -3,6 +3,7 @@ import 'package:finance_app_yandex_smr_2025/core/database/services/database_serv
 import 'package:finance_app_yandex_smr_2025/core/network/network_service.dart';
 import 'package:finance_app_yandex_smr_2025/core/services/backup_service.dart';
 import 'package:finance_app_yandex_smr_2025/core/services/theme_service.dart';
+import 'package:finance_app_yandex_smr_2025/core/services/haptic_service.dart';
 import 'package:finance_app_yandex_smr_2025/features/transaction/domain/repository/transaction_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/category/domain/repositories/category_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/domain/repository/bank_account_repository.dart';
@@ -89,6 +90,11 @@ class ServiceLocator {
     final themeService = ThemeService();
     await themeService.init();
     sl.registerSingleton<ThemeService>(themeService);
+    
+    // Регистрируем HapticService
+    final hapticService = HapticService();
+    await hapticService.init();
+    sl.registerSingleton<HapticService>(hapticService);
   }
 
   static Future<void> _registerRepositories() async {
@@ -184,4 +190,7 @@ class ServiceLocator {
     
   /// Получение сервиса темы
   static ThemeService get themeService => sl<ThemeService>();
+  
+  /// Получение сервиса хаптиков
+  static HapticService get hapticService => sl<HapticService>();
 } 

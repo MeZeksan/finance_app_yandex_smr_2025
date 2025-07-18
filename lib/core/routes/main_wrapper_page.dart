@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:finance_app_yandex_smr_2025/core/di/service_locator.dart';
 import 'package:finance_app_yandex_smr_2025/core/routes/app_router.dart';
 import 'package:finance_app_yandex_smr_2025/core/services/theme_service.dart';
+import 'package:finance_app_yandex_smr_2025/core/services/haptic_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
@@ -15,11 +16,13 @@ class MainWrapperPage extends StatefulWidget {
 
 class _MainWrapperPageState extends State<MainWrapperPage> {
   late ThemeService _themeService;
+  late HapticService _hapticService;
 
   @override
   void initState() {
     super.initState();
     _themeService = ServiceLocator.themeService;
+    _hapticService = ServiceLocator.hapticService;
   }
 
   @override
@@ -39,7 +42,11 @@ class _MainWrapperPageState extends State<MainWrapperPage> {
             return BottomNavigationBar(
               backgroundColor: _themeService.backgroundColor,
               currentIndex: tabsRouter.activeIndex,
-              onTap: tabsRouter.setActiveIndex,
+              onTap: (index) {
+                // Хаптик фидбек при переключении табов
+                _hapticService.lightImpact();
+                tabsRouter.setActiveIndex(index);
+              },
               type: BottomNavigationBarType.fixed,
               selectedLabelStyle: const TextStyle().copyWith(fontSize: 0),
               unselectedLabelStyle: const TextStyle().copyWith(fontSize: 0),

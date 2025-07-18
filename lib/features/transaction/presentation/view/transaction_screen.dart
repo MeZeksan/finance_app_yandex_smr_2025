@@ -1,6 +1,7 @@
 import 'package:finance_app_yandex_smr_2025/features/history/presentation/view/history_screen.dart';
 import 'package:finance_app_yandex_smr_2025/core/di/service_locator.dart';
 import 'package:finance_app_yandex_smr_2025/core/services/theme_service.dart';
+import 'package:finance_app_yandex_smr_2025/core/services/haptic_service.dart';
 import 'package:finance_app_yandex_smr_2025/features/transaction/domain/repository/transaction_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/transaction/presentation/bloc/transaction.bloc.dart';
 
@@ -46,11 +47,13 @@ class TransactionsView extends StatefulWidget {
 
 class _TransactionsViewState extends State<TransactionsView> {
   late ThemeService _themeService;
+  late HapticService _hapticService;
 
   @override
   void initState() {
     super.initState();
     _themeService = ServiceLocator.themeService;
+    _hapticService = ServiceLocator.hapticService;
   }
 
   @override
@@ -138,6 +141,9 @@ class _TransactionsViewState extends State<TransactionsView> {
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: () {
+                            // Хаптик фидбек при нажатии на кнопку повтора
+                            _hapticService.mediumImpact();
+                            
                             context.read<TransactionBloc>().add(
                               LoadTodayTransactions(isIncome: widget.isIncome),
                             );
@@ -246,6 +252,9 @@ class _TransactionsViewState extends State<TransactionsView> {
         heroTag: widget.buttonTag,
         shape: const CircleBorder(),
         onPressed: () async {
+          // Хаптик фидбек при нажатии на кнопку добавления
+          _hapticService.mediumImpact();
+          
           final result = await TransactionScreen.show(
             context,
             widget.isIncome,

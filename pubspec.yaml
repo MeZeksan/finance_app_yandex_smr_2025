@@ -43,6 +43,9 @@ dependencies:
   # Preferences and Theme
   shared_preferences: ^2.3.2
   flutter_colorpicker: ^1.0.3
+  
+  # Haptics
+  haptic_feedback: ^0.3.0
 
 dev_dependencies:
   flutter_test:

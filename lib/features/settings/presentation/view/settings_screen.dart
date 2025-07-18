@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:finance_app_yandex_smr_2025/core/di/service_locator.dart';
 import 'package:finance_app_yandex_smr_2025/core/services/theme_service.dart';
+import 'package:finance_app_yandex_smr_2025/core/services/haptic_service.dart';
 
 @RoutePage()
 class SettingsScreen extends StatefulWidget {
@@ -14,11 +15,13 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   late ThemeService _themeService;
+  late HapticService _hapticService;
 
   @override
   void initState() {
     super.initState();
     _themeService = ServiceLocator.themeService;
+    _hapticService = ServiceLocator.hapticService;
   }
 
   @override
@@ -183,7 +186,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             thickness: 1, 
                             color: _themeService.isDarkMode ? Colors.grey.shade700 : const Color(0xFFE6E6E6)
                           ),
-                          _buildSettingTile('Хаптики', Icons.vibration),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 16),
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Хаптики',
+                                  style: TextStyle(
+                                    color: _themeService.textColor,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Switch(
+                                  value: _hapticService.isEnabled,
+                                  onChanged: (value) {
+                                    _hapticService.setEnabled(value);
+                                    // Хаптик фидбек при переключении
+                                    if (value) {
+                                      _hapticService.mediumImpact();
+                                    }
+                                  },
+                                  activeColor: _themeService.headerColor,
+                                ),
+                              ],
+                            ),
+                          ),
                           Divider(
                             height: 1, 
                             thickness: 1, 
