@@ -1,3 +1,4 @@
+import 'package:finance_app_yandex_smr_2025/core/di/service_locator.dart';
 import 'package:finance_app_yandex_smr_2025/features/analysis/presentation/view/analysis_screen.dart';
 import 'package:finance_app_yandex_smr_2025/features/history/presentation/bloc/history_bloc.dart';
 import 'package:flutter/material.dart';
@@ -14,75 +15,81 @@ class HistoryHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<HistoryBloc>().state;
+    final themeService = ServiceLocator.themeService;
     
-    return Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(16),
-    decoration: const BoxDecoration(
-      color: Color(0xFFb2AE881),
-                ),
-      child: Padding(
-        padding: EdgeInsets.only(top: topPadding),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Positioned(
-              left: 0,
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(24),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    child: const Icon(
-                      Icons.arrow_back,
-                      color: Color(0xFF1D1B20),
-                      size: 24,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const Text(
-              'Моя история',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF1D1B20),
-              ),
-            ),
-            Positioned(
-              right: 0,
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(24),
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => AnalysisScreen(
-                          isIncome: state.isIncome,
+    return ListenableBuilder(
+      listenable: themeService,
+      builder: (context, child) {
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: themeService.headerColor,
+          ),
+          child: Padding(
+            padding: EdgeInsets.only(top: topPadding),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Positioned(
+                  left: 0,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(24),
+                      onTap: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        child: Icon(
+                          Icons.arrow_back,
+                          color: themeService.textColor,
+                          size: 24,
                         ),
                       ),
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    child: const Icon(
-                      Icons.analytics_outlined,
-                      color: Color(0xFF1D1B20),
-                      size: 24,
                     ),
                   ),
                 ),
-              ),
+                Text(
+                  'Моя история',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w400,
+                    color: themeService.textColor,
+                  ),
+                ),
+                Positioned(
+                  right: 0,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(24),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => AnalysisScreen(
+                              isIncome: state.isIncome,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        child: Icon(
+                          Icons.analytics_outlined,
+                          color: themeService.textColor,
+                          size: 24,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

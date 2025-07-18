@@ -1,4 +1,5 @@
 import 'package:finance_app_yandex_smr_2025/core/di/service_locator.dart';
+import 'package:finance_app_yandex_smr_2025/core/services/theme_service.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/data/models/account_brief/account_brief.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/domain/repository/bank_account_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/category/data/models/category.dart';
@@ -11,7 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'dart:developer' as developer;
 
-class TransactionTile extends StatelessWidget {
+class TransactionTile extends StatefulWidget {
   final TransactionResponce transaction;
   final bool showDate;
   final bool isFirst;
@@ -28,99 +29,119 @@ class TransactionTile extends StatelessWidget {
   });
 
   @override
+  State<TransactionTile> createState() => _TransactionTileState();
+}
+
+class _TransactionTileState extends State<TransactionTile> {
+  late ThemeService _themeService;
+
+  @override
+  void initState() {
+    super.initState();
+    _themeService = ServiceLocator.themeService;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final amount = double.tryParse(transaction.amount) ?? 0.0;
+    final amount = double.tryParse(widget.transaction.amount) ?? 0.0;
     final formatter = NumberFormat('#,##0', 'ru_RU');
     final formattedAmount = '${formatter.format(amount.round())} ₽';
     
-    final dateString = DateFormat('dd.MM.yyyy', 'ru_RU').format(transaction.transactionDate);
-    final timeString = DateFormat('HH:mm', 'ru_RU').format(transaction.transactionDate);
+    final dateString = DateFormat('dd.MM.yyyy', 'ru_RU').format(widget.transaction.transactionDate);
+    final timeString = DateFormat('HH:mm', 'ru_RU').format(widget.transaction.transactionDate);
 
-    return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFFFEF7FF),
-      ),
-      child: Column(
-        children: [
-          if (isFirst) const Divider(height: 0,),
-          ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFEF7FF),
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Center(
-                child: Text(
-                  transaction.category.emoji,
-                  style: const TextStyle(fontSize: 20),
-                ),
-              ),
-            ),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  transaction.category.name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+    return ListenableBuilder(
+      listenable: _themeService,
+      builder: (context, child) {
+        return Container(
+          decoration: BoxDecoration(
+            color: _themeService.backgroundColor,
+          ),
+          child: Column(
+            children: [
+              if (widget.isFirst) Divider(height: 0, color: Colors.grey.shade300),
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                leading: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: _themeService.containerColor,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Center(
+                    child: Text(
+                      widget.transaction.category.emoji,
+                      style: const TextStyle(fontSize: 20),
+                    ),
                   ),
                 ),
-                if (transaction.comment != null && transaction.comment!.isNotEmpty)
-              Text(
-                transaction.comment!,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
-              ),
-              ],
-            ),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  formattedAmount,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      showDate ? '$dateString $timeString' : timeString,
+                      widget.transaction.category.name,
                       style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[500],
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: _themeService.textColor,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    const Icon(
-                      Icons.chevron_right,
-                      color: Colors.grey,
-                      size: 16,
+                    if (widget.transaction.comment != null && widget.transaction.comment!.isNotEmpty)
+                  Text(
+                    widget.transaction.comment!,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: _themeService.textColor.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  ],
+                ),
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      formattedAmount,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: _themeService.textColor,
+                      ),
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          widget.showDate ? '$dateString $timeString' : timeString,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: _themeService.textColor.withValues(alpha: 0.5),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.chevron_right,
+                          color: _themeService.textColor.withValues(alpha: 0.5),
+                          size: 16,
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-            onTap: () async {
-              final result = await _showEditTransactionModal(context, transaction);
-              if (result == true && onChanged != null) {
-                onChanged!();
-              }
-            },
+                onTap: () async {
+                  final result = await _showEditTransactionModal(context, widget.transaction);
+                  if (result == true && widget.onChanged != null) {
+                    widget.onChanged!();
+                  }
+                },
+              ),
+              if (!widget.isLast) Divider(height: 0, color: Colors.grey.shade300),
+              if (widget.isLast) Divider(height: 0, color: Colors.grey.shade300),
+            ],
           ),
-          if (!isLast) const Divider(height: 0,),
-        if (isLast) const Divider(height: 0,),
-          ],
-      ),
+        );
+      },
     );
   }
 
@@ -194,12 +215,14 @@ class _TransactionScreenState extends State<TransactionScreen> {
   
   late final BankAccountRepository _accountRepository;
   late final CategoryRepository _categoryRepository;
+  late ThemeService _themeService;
 
   @override
   void initState() {
     super.initState();
     _accountRepository = ServiceLocator.bankAccountRepository;
     _categoryRepository = ServiceLocator.categoryRepository;
+    _themeService = ServiceLocator.themeService;
     _initializeData();
   }
 
@@ -518,69 +541,73 @@ class _TransactionScreenState extends State<TransactionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFEF7FF),
-      body: Column(
-        children: [
-          // Header with status bar padding
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 16,
-              left: 16,
-              right: 16,
-              bottom: 16,
-            ),
-            decoration: const BoxDecoration(
-              color: Color(0xFFb2AE881),
-            ),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.black),
-                  onPressed: () => Navigator.of(context).pop(),
+    return ListenableBuilder(
+      listenable: _themeService,
+      builder: (context, child) {
+        return Scaffold(
+          backgroundColor: _themeService.backgroundColor,
+          body: Column(
+            children: [
+              // Header with status bar padding
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + 16,
+                  left: 16,
+                  right: 16,
+                  bottom: 16,
                 ),
-                Expanded(
-                  child: Text(
-                    widget.isIncome ? 'Мои доходы' : 'Мои расходы',
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500,
+                decoration: BoxDecoration(
+                  color: _themeService.headerColor,
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.close, color: _themeService.textColor),
+                      onPressed: () => Navigator.of(context).pop(),
                     ),
-                    textAlign: TextAlign.center,
-                  ),
+                    Expanded(
+                      child: Text(
+                        widget.isIncome ? 'Мои доходы' : 'Мои расходы',
+                        style: TextStyle(
+                          color: _themeService.textColor,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.check, color: _themeService.textColor),
+                      onPressed: _isSaving ? null : _saveTransaction,
+                    ),
+                  ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.check, color: Colors.black),
-                  onPressed: _isSaving ? null : _saveTransaction,
-                ),
-              ],
-            ),
-          ),
+              ),
           
           // Content
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(child: CircularProgressIndicator(color: _themeService.headerColor))
                 : SingleChildScrollView(
                     child: Column(
                       children: [
                         // Account Selection
                         Container(
                           width: double.infinity,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFFEF7FF),
+                          decoration: BoxDecoration(
+                            color: _themeService.backgroundColor,
                           ),
                           child: Column(
                             children: [
                               ListTile(
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                title: const Text(
+                                title: Text(
                                   'Счет',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w400,
+                                    color: _themeService.textColor,
                                   ),
                                 ),
                                 trailing: Row(
@@ -591,16 +618,16 @@ class _TransactionScreenState extends State<TransactionScreen> {
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w400,
-                                        color: _selectedAccount != null ? Colors.black : Colors.grey,
+                                        color: _selectedAccount != null ? _themeService.textColor : Colors.grey,
                                       ),
                                     ),
                                     const SizedBox(width: 8),
-                                    const Icon(Icons.chevron_right, color: Colors.grey),
+                                    Icon(Icons.chevron_right, color: Colors.grey),
                                   ],
                                 ),
                                 onTap: _showAccountSelector,
                               ),
-                              const Divider(height: 1, color: Colors.grey),
+                              Divider(height: 1, color: Colors.grey.shade300),
                             ],
                           ),
                         ),
@@ -834,6 +861,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
           ),
         ],
       ),
+        );
+      },
     );
   }
 

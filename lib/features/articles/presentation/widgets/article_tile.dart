@@ -1,7 +1,9 @@
 import 'package:finance_app_yandex_smr_2025/features/articles/data/models/article.dart';
+import 'package:finance_app_yandex_smr_2025/core/di/service_locator.dart';
+import 'package:finance_app_yandex_smr_2025/core/services/theme_service.dart';
 import 'package:flutter/material.dart';
 
-class ArticleTile extends StatelessWidget {
+class ArticleTile extends StatefulWidget {
   final Article article;
   final bool isFirst;
   final bool isLast;
@@ -14,50 +16,68 @@ class ArticleTile extends StatelessWidget {
   });
 
   @override
+  State<ArticleTile> createState() => _ArticleTileState();
+}
+
+class _ArticleTileState extends State<ArticleTile> {
+  late ThemeService _themeService;
+
+  @override
+  void initState() {
+    super.initState();
+    _themeService = ServiceLocator.themeService;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          top: isFirst ? const BorderSide(color: Color(0xFFE6E6E6)) : BorderSide.none,
-          bottom: BorderSide(color: const Color(0xFFE6E6E6)),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 18.0, horizontal: 16.0),
-        child: Row(
-          children: [
-            // Emoji with background
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                color: article.iconBackground,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Center(
-                child: Text(
-                  article.emoji,
-                  style: const TextStyle(
-                    fontSize: 18,
+    return ListenableBuilder(
+      listenable: _themeService,
+      builder: (context, child) {
+        return Container(
+          decoration: BoxDecoration(
+            color: _themeService.backgroundColor,
+            border: Border(
+              top: widget.isFirst ? BorderSide(color: Colors.grey.shade300) : BorderSide.none,
+              bottom: BorderSide(color: Colors.grey.shade300),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 18.0, horizontal: 16.0),
+            child: Row(
+              children: [
+                // Emoji with background
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: _themeService.containerColor,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Center(
+                    child: Text(
+                      widget.article.emoji,
+                      style: const TextStyle(
+                        fontSize: 18,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            // Article title
-            Expanded(
-              child: Text(
-                article.title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Color(0xFF1D1B20),
+                const SizedBox(width: 16),
+                // Article title
+                Expanded(
+                  child: Text(
+                    widget.article.title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: _themeService.textColor,
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 } 

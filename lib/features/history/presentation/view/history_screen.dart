@@ -1,5 +1,6 @@
 import 'package:auto_route/annotations.dart';
 import 'package:finance_app_yandex_smr_2025/core/di/service_locator.dart';
+import 'package:finance_app_yandex_smr_2025/core/services/theme_service.dart';
 import 'package:finance_app_yandex_smr_2025/features/history/presentation/bloc/history_bloc.dart';
 import 'package:finance_app_yandex_smr_2025/features/history/presentation/widgets/widgets.dart';
 import 'package:flutter/material.dart';
@@ -41,10 +42,12 @@ class HistoryView extends StatefulWidget {
 
 class _HistoryViewState extends State<HistoryView> {
   bool _isLocaleInitialized = false;
+  late ThemeService _themeService;
 
   @override
   void initState() {
     super.initState();
+    _themeService = ServiceLocator.themeService;
     _initializeLocale();
   }
 
@@ -128,16 +131,26 @@ class _HistoryViewState extends State<HistoryView> {
     final double topPadding = statusBarHeight + 16.0;
     
     if (!_isLocaleInitialized) {
-      return const Scaffold(
-        backgroundColor: Color(0xFFFEF7FF),
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
+      return ListenableBuilder(
+        listenable: _themeService,
+        builder: (context, child) {
+          return Scaffold(
+            backgroundColor: _themeService.backgroundColor,
+            body: Center(
+              child: CircularProgressIndicator(
+                color: _themeService.headerColor,
+              ),
+            ),
+          );
+        },
       );
     }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFFEF7FF),
+    return ListenableBuilder(
+      listenable: _themeService,
+      builder: (context, child) {
+        return Scaffold(
+          backgroundColor: _themeService.backgroundColor,
       body: BlocBuilder<HistoryBloc, HistoryState>(
         builder: (context, state) {
           return Column(
@@ -146,8 +159,8 @@ class _HistoryViewState extends State<HistoryView> {
 
               Container(
                 width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFD4FAE6),
+                decoration: BoxDecoration(
+                  color: _themeService.containerColor,
                 ),
                 child: Column(
                   children: [
@@ -157,15 +170,15 @@ class _HistoryViewState extends State<HistoryView> {
                       child: Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFD4FAE6),
+                        decoration: BoxDecoration(
+                          color: _themeService.containerColor,
                         ),
                         child: Row(
                           children: [
-                            const Text(
+                            Text(
                               'Начало',
                               style: TextStyle(
-                                color: Color(0xFF1D1B20),
+                                color: _themeService.textColor,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w400,
                               ),
@@ -175,17 +188,17 @@ class _HistoryViewState extends State<HistoryView> {
                               children: [
                                 Text(
                                   state.formattedStartDate,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w500,
-                                    color: Color(0xFF1D1B20),
+                                    color: _themeService.textColor,
                                   ),
                                 ),
                                 const SizedBox(width: 8),
-                                const Icon(
+                                Icon(
                                   Icons.calendar_today,
                                   size: 16,
-                                  color: Color(0xFF1D1B20),
+                                  color: _themeService.textColor,
                                 ),
                               ],
                             ),
@@ -193,24 +206,24 @@ class _HistoryViewState extends State<HistoryView> {
                         ),
                       ),
                     ),
-                    const Divider(height: 1),
+                    Divider(height: 1, color: Colors.grey.shade300),
                     
                     InkWell(
                       onTap: () => _selectDate(context, false),
                       child: Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFD4FAE6),
+                        decoration: BoxDecoration(
+                          color: _themeService.containerColor,
                         ),
                         child: Row(
                           children: [
-                            const Text(
+                            Text(
                               'Конец',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w400,
-                                color: Color(0xFF1D1B20),
+                                color: _themeService.textColor,
                               ),
                             ),
                             const Spacer(),
@@ -218,17 +231,17 @@ class _HistoryViewState extends State<HistoryView> {
                               children: [
                                 Text(
                                   state.formattedEndDate,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w500,
-                                    color: Color(0xFF1D1B20),
+                                    color: _themeService.textColor,
                                   ),
                                 ),
                                 const SizedBox(width: 8),
-                                const Icon(
+                                Icon(
                                   Icons.calendar_today,
                                   size: 16,
-                                  color: Color(0xFF1D1B20),
+                                  color: _themeService.textColor,
                                 ),
                               ],
                             ),
@@ -236,37 +249,37 @@ class _HistoryViewState extends State<HistoryView> {
                         ),
                       ),
                     ),
-                    const Divider(height: 1),
+                    Divider(height: 1, color: Colors.grey.shade300),
                     
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFD4FAE6),
+                      decoration: BoxDecoration(
+                        color: _themeService.containerColor,
                       ),
                       child: Row(
                         children: [
-                          const Text(
+                          Text(
                             'Сумма',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w400,
-                              color: Color(0xFF1D1B20),
+                              color: _themeService.textColor,
                             ),
                           ),
                           const Spacer(),
                           Text(
                             state.formattedTotalAmount,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
-                              color: Color(0xFF1D1B20),
+                              color: _themeService.textColor,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const Divider(height: 1),
+                    Divider(height: 1, color: Colors.grey.shade300),
                   ],
                 ),
               ),
@@ -279,13 +292,17 @@ class _HistoryViewState extends State<HistoryView> {
           );
         },
       ),
+        );
+      },
     );
   }
 
   Widget _buildContent(BuildContext context, HistoryState state) {
     if (state.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
+      return Center(
+        child: CircularProgressIndicator(
+          color: _themeService.headerColor,
+        ),
       );
     }
 
@@ -313,6 +330,10 @@ class _HistoryViewState extends State<HistoryView> {
               onPressed: () {
                 context.read<HistoryBloc>().add(const HistoryRefreshed());
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _themeService.headerColor,
+                foregroundColor: Colors.white,
+              ),
               child: const Text('Повторить'),
             ),
           ],
@@ -331,7 +352,7 @@ class _HistoryViewState extends State<HistoryView> {
                       Icon(
                         state.isIncome ? Icons.trending_up : Icons.trending_down,
                         size: 64,
-                        color: Colors.grey[400],
+                        color: _themeService.textColor.withValues(alpha: 0.4),
                       ),
                       const SizedBox(height: 16),
                       Text(
@@ -340,7 +361,7 @@ class _HistoryViewState extends State<HistoryView> {
                             : 'Нет расходов за выбранный период',
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.grey[600],
+                          color: _themeService.textColor.withValues(alpha: 0.6),
                         ),
                       ),
                     ],

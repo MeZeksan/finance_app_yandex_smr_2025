@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:auto_route/annotations.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/data/models/account_update_request/account_update_request.dart';
 import 'package:finance_app_yandex_smr_2025/core/di/service_locator.dart';
+import 'package:finance_app_yandex_smr_2025/core/services/theme_service.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/presentation/bloc/account_bloc.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/presentation/bloc/account_event.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/presentation/bloc/account_state.dart';
@@ -45,10 +46,13 @@ class _AccountViewState extends State<AccountView> with SingleTickerProviderStat
   StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
   DateTime? _lastShakeTime;
   List<BalanceData> _balanceData = [];
+  late ThemeService _themeService;
   
   @override
   void initState() {
     super.initState();
+    
+    _themeService = ServiceLocator.themeService;
     
     // Инициализация анимации
     _animationController = AnimationController(
@@ -206,9 +210,12 @@ class _AccountViewState extends State<AccountView> with SingleTickerProviderStat
     final double statusBarHeight = MediaQuery.of(context).padding.top;
     final double topPadding = statusBarHeight + 16.0;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFFEF7FF),
-      body: BlocBuilder<AccountBloc, AccountState>(
+    return ListenableBuilder(
+      listenable: _themeService,
+      builder: (context, child) {
+        return Scaffold(
+          backgroundColor: _themeService.backgroundColor,
+          body: BlocBuilder<AccountBloc, AccountState>(
         builder: (context, state) {
           if (state.isLoading) {
             return const Center(
@@ -267,8 +274,8 @@ class _AccountViewState extends State<AccountView> with SingleTickerProviderStat
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFb2AE881),
+                decoration: BoxDecoration(
+                  color: _themeService.headerColor,
                 ),
                 child: Padding(
                   padding: EdgeInsets.only(top: topPadding),
@@ -277,10 +284,10 @@ class _AccountViewState extends State<AccountView> with SingleTickerProviderStat
                     children: [
                       Text(
                         account.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w400,
-                          color: Color(0xFF1D1B20),
+                          color: _themeService.textColor,
                         ),
                       ),
                       Positioned(
@@ -289,9 +296,9 @@ class _AccountViewState extends State<AccountView> with SingleTickerProviderStat
                           onPressed: () {
                             _showEditDialog(context, state);
                           },
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.edit,
-                            color: Color(0xFF1D1B20),
+                            color: _themeService.textColor,
                           ),
                         ),
                       ),
@@ -307,8 +314,8 @@ class _AccountViewState extends State<AccountView> with SingleTickerProviderStat
                     // Balance Container
                     Container(
                       width: double.infinity,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFD4FAE6),
+                      decoration: BoxDecoration(
+                        color: _themeService.containerColor,
                       ),
                       child: Column(
                         children: [
@@ -318,10 +325,10 @@ class _AccountViewState extends State<AccountView> with SingleTickerProviderStat
                             padding: const EdgeInsets.all(16),
                             child: Row(
                               children: [
-                                const Text(
+                                Text(
                                   'Баланс',
                                   style: TextStyle(
-                                    color: Color(0xFF1D1B20),
+                                    color: _themeService.textColor,
                                     fontSize: 16,
                                   ),
                                 ),
@@ -336,8 +343,8 @@ class _AccountViewState extends State<AccountView> with SingleTickerProviderStat
                                           return _isBalanceVisible
                                             ? Text(
                                                 '$formattedBalance ${_getCurrencySymbol(account.currency)}',
-                                                style: const TextStyle(
-                                                  color: Color(0xFF1D1B20),
+                                                style: TextStyle(
+                                                  color: _themeService.textColor,
                                                   fontSize: 18,
                                                 ),
                                               )
@@ -350,25 +357,25 @@ class _AccountViewState extends State<AccountView> with SingleTickerProviderStat
                                       const SizedBox(width: 4),
                                       Icon(
                                         _isBalanceVisible ? Icons.visibility : Icons.visibility_off,
-                                        color: const Color(0xFF1D1B20),
+                                        color: _themeService.textColor,
                                         size: 20,
                                       ),
                                     ],
                                   ),
                                 ),
                                 const SizedBox(width: 4),
-                                const Icon(
+                                Icon(
                                   Icons.chevron_right,
-                                  color: Color(0xFF1D1B20),
+                                  color: _themeService.textColor,
                                   size: 24,
                                 ),
                               ],
                             ),
                           ),
-                          const Divider(
+                          Divider(
                             height: 1,
                             thickness: 1,
-                            color: Color(0xFFE6E6E6),
+                            color: Colors.grey.shade300,
                           ),
                           // Currency Container
                           Container(
@@ -376,25 +383,25 @@ class _AccountViewState extends State<AccountView> with SingleTickerProviderStat
                             padding: const EdgeInsets.all(16),
                             child: Row(
                               children: [
-                                const Text(
+                                Text(
                                   'Валюта',
                                   style: TextStyle(
-                                    color: Color(0xFF1D1B20),
+                                    color: _themeService.textColor,
                                     fontSize: 16,
                                   ),
                                 ),
                                 const Spacer(),
                                 Text(
                                   _getCurrencySymbol(account.currency),
-                                  style: const TextStyle(
-                                    color: Color(0xFF1D1B20),
+                                  style: TextStyle(
+                                    color: _themeService.textColor,
                                     fontSize: 18,
                                   ),
                                 ),
                                 const SizedBox(width: 4),
-                                const Icon(
+                                Icon(
                                   Icons.chevron_right,
-                                  color: Color(0xFF1D1B20),
+                                  color: _themeService.textColor,
                                   size: 24,
                                 ),
                               ],
@@ -418,19 +425,8 @@ class _AccountViewState extends State<AccountView> with SingleTickerProviderStat
           );
         },
       ),
-      // Floating Action Button
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'accountButtonTag',
-        shape: const CircleBorder(),
-        onPressed: () {
-          // TODO: Implement add functionality
-        },
-        backgroundColor: const Color(0xFFb2AE881),
-        child: const Icon(
-          Icons.add,
-          color: Colors.white,
-        ),
-      ),
+        );
+      },
     );
   }
   

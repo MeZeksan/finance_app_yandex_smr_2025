@@ -1,5 +1,7 @@
 import 'package:finance_app_yandex_smr_2025/features/history/presentation/view/history_screen.dart';
 import 'package:finance_app_yandex_smr_2025/core/di/service_locator.dart';
+import 'package:finance_app_yandex_smr_2025/core/services/theme_service.dart';
+import 'package:finance_app_yandex_smr_2025/core/services/haptic_service.dart';
 import 'package:finance_app_yandex_smr_2025/features/transaction/domain/repository/transaction_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/transaction/presentation/bloc/transaction.bloc.dart';
 
@@ -30,7 +32,7 @@ class TransactionsScreen extends StatelessWidget {
   }
 }
 
-class TransactionsView extends StatelessWidget {
+class TransactionsView extends StatefulWidget {
   final bool isIncome;
   final String buttonTag;
   const TransactionsView({
@@ -40,19 +42,37 @@ class TransactionsView extends StatelessWidget {
   });
 
   @override
+  State<TransactionsView> createState() => _TransactionsViewState();
+}
+
+class _TransactionsViewState extends State<TransactionsView> {
+  late ThemeService _themeService;
+  late HapticService _hapticService;
+
+  @override
+  void initState() {
+    super.initState();
+    _themeService = ServiceLocator.themeService;
+    _hapticService = ServiceLocator.hapticService;
+  }
+
+  @override
   Widget build(BuildContext context) {
     final double statusBarHeight = MediaQuery.of(context).padding.top;
     final double topPadding = statusBarHeight + 16.0;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFFEF7FF),
+    return ListenableBuilder(
+      listenable: _themeService,
+      builder: (context, child) {
+        return Scaffold(
+          backgroundColor: _themeService.backgroundColor,
       body: Column(
         children: [
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              color: Color(0xFFb2AE881),
+            decoration: BoxDecoration(
+              color: _themeService.headerColor,
             ),
             child: Padding(
               padding:  EdgeInsets.only(top:topPadding),
@@ -60,11 +80,11 @@ class TransactionsView extends StatelessWidget {
                 alignment: Alignment.center,
                 children: [
                   Text(
-                    isIncome ? 'Доходы сегодня' : 'Расходы сегодня',
-                    style: const TextStyle(
+                    widget.isIncome ? 'Доходы сегодня' : 'Расходы сегодня',
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w400,
-                      color: Color(0xFF1D1B20),
+                      color: _themeService.textColor,
                     ),
                   ),
                   Positioned(
@@ -73,12 +93,12 @@ class TransactionsView extends StatelessWidget {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => HistoryScreen(isIncome: isIncome)),
+                          MaterialPageRoute(builder: (context) => HistoryScreen(isIncome: widget.isIncome)),
                         );
                       },
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.refresh,
-                        color: Color(0xFF1D1B20),
+                        color: _themeService.textColor,
                       ),
                     ),
                   ),
@@ -92,8 +112,10 @@ class TransactionsView extends StatelessWidget {
             child: BlocBuilder<TransactionBloc, TransactionState>(
               builder: (context, state) {
                 if (state is TransactionLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
+                  return Center(
+                    child: CircularProgressIndicator(
+                      color: _themeService.headerColor,
+                    ),
                   );
                 }
             
@@ -119,10 +141,17 @@ class TransactionsView extends StatelessWidget {
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: () {
+                            // Хаптик фидбек при нажатии на кнопку повтора
+                            _hapticService.mediumImpact();
+                            
                             context.read<TransactionBloc>().add(
-                              LoadTodayTransactions(isIncome: isIncome),
+                              LoadTodayTransactions(isIncome: widget.isIncome),
                             );
                           },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _themeService.headerColor,
+                            foregroundColor: Colors.white,
+                          ),
                           child: const Text('Повторить'),
                         ),
                       ],
@@ -137,15 +166,15 @@ class TransactionsView extends StatelessWidget {
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFD4FAE6),
+                        decoration: BoxDecoration(
+                          color: _themeService.containerColor,
                         ),
                         child: Row(
                           children: [
-                            const Text(
+                            Text(
                               'Всего',
                               style: TextStyle(
-                                color: Color(0xFF1D1B20),
+                                color: _themeService.textColor,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w400,
                               ),
@@ -153,8 +182,8 @@ class TransactionsView extends StatelessWidget {
                             const Spacer(),
                             Text(
                               state.totalAmount,
-                              style: const TextStyle(
-                                color: Color(0xFF1D1B20),
+                              style: TextStyle(
+                                color: _themeService.textColor,
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -170,18 +199,18 @@ class TransactionsView extends StatelessWidget {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(
-                                      isIncome ? Icons.trending_up : Icons.trending_down,
+                                      widget.isIncome ? Icons.trending_up : Icons.trending_down,
                                       size: 64,
-                                      color: Colors.grey[400],
+                                      color: _themeService.textColor.withValues(alpha: 0.4),
                                     ),
                                     const SizedBox(height: 16),
                                     Text(
-                                      isIncome 
+                                      widget.isIncome 
                                           ? 'Нет доходов за сегодня'
                                           : 'Нет расходов за сегодня',
                                       style: TextStyle(
                                         fontSize: 16,
-                                        color: Colors.grey[600],
+                                        color: _themeService.textColor.withValues(alpha: 0.6),
                                       ),
                                     ),
                                   ],
@@ -198,7 +227,7 @@ class TransactionsView extends StatelessWidget {
                                     onChanged: () {
                                       // Refresh the transactions when one is edited
                                       context.read<TransactionBloc>().add(
-                                        LoadTodayTransactions(isIncome: isIncome),
+                                        LoadTodayTransactions(isIncome: widget.isIncome),
                                       );
                                     },
                                   );
@@ -208,8 +237,10 @@ class TransactionsView extends StatelessWidget {
                     ],
                   );
                 }
-                return const Center(
-                  child: CircularProgressIndicator(),
+                return Center(
+                  child: CircularProgressIndicator(
+                    color: _themeService.headerColor,
+                  ),
                 );
               },
             ),
@@ -218,27 +249,32 @@ class TransactionsView extends StatelessWidget {
       ),
       // Floating Action Button
       floatingActionButton: FloatingActionButton(
-        heroTag: buttonTag,
+        heroTag: widget.buttonTag,
         shape: const CircleBorder(),
         onPressed: () async {
+          // Хаптик фидбек при нажатии на кнопку добавления
+          _hapticService.mediumImpact();
+          
           final result = await TransactionScreen.show(
             context,
-            isIncome,
+            widget.isIncome,
             ServiceLocator.transactionRepository,
           );
           if (result == true) {
             // Refresh transactions after creating new one
             context.read<TransactionBloc>().add(
-              LoadTodayTransactions(isIncome: isIncome),
+              LoadTodayTransactions(isIncome: widget.isIncome),
             );
           }
         },
-        backgroundColor: const Color(0xFFb2AE881),
+        backgroundColor: _themeService.headerColor,
         child: const Icon(
           Icons.add,
           color: Colors.white,
         ),
       ),
+        );
+      },
     );
   }
 }
