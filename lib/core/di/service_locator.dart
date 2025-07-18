@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:finance_app_yandex_smr_2025/core/database/services/database_service.dart';
 import 'package:finance_app_yandex_smr_2025/core/network/network_service.dart';
 import 'package:finance_app_yandex_smr_2025/core/services/backup_service.dart';
+import 'package:finance_app_yandex_smr_2025/core/services/theme_service.dart';
 import 'package:finance_app_yandex_smr_2025/features/transaction/domain/repository/transaction_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/category/domain/repositories/category_repository.dart';
 import 'package:finance_app_yandex_smr_2025/features/account/domain/repository/bank_account_repository.dart';
@@ -83,6 +84,11 @@ class ServiceLocator {
     if (_currentMode == AppMode.network) {
       sl.registerSingleton<BackupService>(BackupService());
     }
+    
+    // Регистрируем ThemeService
+    final themeService = ThemeService();
+    await themeService.init();
+    sl.registerSingleton<ThemeService>(themeService);
   }
 
   static Future<void> _registerRepositories() async {
@@ -175,4 +181,7 @@ class ServiceLocator {
   /// Получение сервиса бэкапа (если доступен)
   static BackupService? get backupService => 
     sl.isRegistered<BackupService>() ? sl<BackupService>() : null;
+    
+  /// Получение сервиса темы
+  static ThemeService get themeService => sl<ThemeService>();
 } 
