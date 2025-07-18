@@ -27,7 +27,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final double topPadding = statusBarHeight + 16.0;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFEF7FF),
+      backgroundColor: _themeService.backgroundColor,
       body: ListenableBuilder(
         listenable: _themeService,
         builder: (context, child) {
@@ -38,17 +38,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 alignment: Alignment.center,
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFb2AE881),
+                decoration: BoxDecoration(
+                  color: _themeService.headerColor,
                 ),
                 child: Padding(
                   padding: EdgeInsets.only(top: topPadding),
-                  child: const Text(
+                  child: Text(
                     'Настройки',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w400,
-                      color: Color(0xFF1D1B20),
+                      color: _themeService.textColor,
                     ),
                   ),
                 ),
@@ -57,78 +57,78 @@ class _SettingsScreenState extends State<SettingsScreen> {
               // Content
               Column(
                 children: [
-                  Container(
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: Colors.transparent,
-                    ),
-                    child: Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.only(left: 16, right: 16, top:8, bottom: 8),
-                          width: double.infinity,
-                          child: Row(
-                            children: [
-                              const Text(
-                                'Тёмная тема',
-                                style: TextStyle(
-                                  color: Color(0xFF1D1B20),
-                                  fontSize: 16,
-                                ),
-                              ),
-                              const Spacer(),
-                              Switch(
-                                value: _themeService.useSystemTheme,
-                                onChanged: (value) {
-                                  _themeService.setUseSystemTheme(value);
-                                },
-                                activeColor: const Color.fromARGB(250, 26, 165, 88),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Divider(
-                          height: 1,
-                          thickness: 1,
-                          color: Color(0xFFE6E6E6),
-                        ),
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            children: [
-                              const Text(
-                                'Основной цвет',
-                                style: TextStyle(
-                                  color: Color(0xFF1D1B20),
-                                  fontSize: 16,
-                                ),
-                              ),
-                              const Spacer(),
-                              GestureDetector(
-                                onTap: () => _showColorPicker(context),
-                                child: Container(
-                                  width: 24,
-                                  height: 24,
-                                  decoration: BoxDecoration(
-                                    color: _themeService.primaryColor,
-                                    borderRadius: BorderRadius.circular(4),
-                                    border: Border.all(color: Colors.grey.shade300),
+                                      Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: _themeService.containerColor,
+                      ),
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.only(left: 16, right: 16, top:8, bottom: 8),
+                            width: double.infinity,
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Тёмная тема',
+                                  style: TextStyle(
+                                    color: _themeService.textColor,
+                                    fontSize: 16,
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 4),
-                              const Icon(
-                                Icons.chevron_right,
-                                color: Color(0xFF1D1B20),
-                                size: 24,
-                              ),
-                            ],
+                                const Spacer(),
+                                Switch(
+                                  value: _themeService.useSystemTheme,
+                                  onChanged: (value) {
+                                    _themeService.setUseSystemTheme(value);
+                                  },
+                                  activeColor: _themeService.headerColor,
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                          Divider(
+                            height: 1,
+                            thickness: 1,
+                            color: Colors.grey.shade300,
+                          ),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Основной цвет',
+                                  style: TextStyle(
+                                    color: _themeService.textColor,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const Spacer(),
+                                GestureDetector(
+                                  onTap: () => _showColorPicker(context),
+                                  child: Container(
+                                    width: 24,
+                                    height: 24,
+                                    decoration: BoxDecoration(
+                                      color: _themeService.primaryColor,
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(color: Colors.grey.shade300),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Icon(
+                                  Icons.chevron_right,
+                                  color: _themeService.textColor,
+                                  size: 24,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
                   
                   const Divider(height: 1, thickness: 1, color: Color(0xFFE6E6E6)),
                   _buildSettingTile('Звуки', Icons.volume_up),
@@ -157,17 +157,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
       padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 16),
       child: Row(
         children: [
+          Icon(
+            icon,
+            color: _themeService.textColor,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
           Text(
             title,
-            style: const TextStyle(
-              color: Color(0xFF1D1B20),
+            style: TextStyle(
+              color: _themeService.textColor,
               fontSize: 16,
             ),
           ),
           const Spacer(),
-          const Icon(
+          Icon(
             Icons.chevron_right,
-            color: Color(0xFF1D1B20),
+            color: _themeService.textColor,
             size: 24,
           ),
         ],
