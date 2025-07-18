@@ -425,19 +425,6 @@ class _AccountViewState extends State<AccountView> with SingleTickerProviderStat
           );
         },
       ),
-      // Floating Action Button
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'accountButtonTag',
-        shape: const CircleBorder(),
-        onPressed: () {
-          // TODO: Implement add functionality
-        },
-        backgroundColor: _themeService.headerColor,
-        child: const Icon(
-          Icons.add,
-          color: Colors.white,
-        ),
-      ),
         );
       },
     );

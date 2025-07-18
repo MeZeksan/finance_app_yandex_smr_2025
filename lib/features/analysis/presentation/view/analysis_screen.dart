@@ -1,5 +1,6 @@
 import 'package:auto_route/annotations.dart';
 import 'package:finance_app_yandex_smr_2025/core/di/service_locator.dart';
+import 'package:finance_app_yandex_smr_2025/core/services/theme_service.dart';
 import 'package:finance_app_yandex_smr_2025/features/analysis/presentation/bloc/analysis_bloc.dart';
 import 'package:finance_app_yandex_smr_2025/features/analysis/presentation/bloc/analysis_event.dart';
 import 'package:finance_app_yandex_smr_2025/features/analysis/presentation/bloc/analysis_state.dart';
@@ -44,10 +45,12 @@ class AnalysisView extends StatefulWidget {
 
 class _AnalysisViewState extends State<AnalysisView> {
   bool _isLocaleInitialized = false;
+  late ThemeService _themeService;
 
   @override
   void initState() {
     super.initState();
+    _themeService = ServiceLocator.themeService;
     _initializeLocale();
   }
 
@@ -111,16 +114,26 @@ class _AnalysisViewState extends State<AnalysisView> {
     final double topPadding = statusBarHeight + 16.0;
     
     if (!_isLocaleInitialized) {
-      return const Scaffold(
-        backgroundColor: Color(0xFFFEF7FF),
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
+      return ListenableBuilder(
+        listenable: _themeService,
+        builder: (context, child) {
+          return Scaffold(
+            backgroundColor: _themeService.backgroundColor,
+            body: Center(
+              child: CircularProgressIndicator(
+                color: _themeService.headerColor,
+              ),
+            ),
+          );
+        },
       );
     }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFFEF7FF),
+    return ListenableBuilder(
+      listenable: _themeService,
+      builder: (context, child) {
+        return Scaffold(
+          backgroundColor: _themeService.backgroundColor,
       body: BlocBuilder<AnalysisBloc, AnalysisState>(
         builder: (context, state) {
           return Column(
@@ -129,8 +142,8 @@ class _AnalysisViewState extends State<AnalysisView> {
 
               Container(
                 width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFD4FAE6),
+                decoration: BoxDecoration(
+                  color: _themeService.containerColor,
                 ),
                 child: Column(
                   children: [
@@ -140,15 +153,15 @@ class _AnalysisViewState extends State<AnalysisView> {
                       child: Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFD4FAE6),
+                        decoration: BoxDecoration(
+                          color: _themeService.containerColor,
                         ),
                         child: Row(
                           children: [
-                            const Text(
+                            Text(
                               'Период: начало',
                               style: TextStyle(
-                                color: Color(0xFF1D1B20),
+                                color: _themeService.textColor,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w400,
                               ),
@@ -158,17 +171,17 @@ class _AnalysisViewState extends State<AnalysisView> {
                               children: [
                                 Text(
                                   state.formattedStartDate,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w500,
-                                    color: Color(0xFF1D1B20),
+                                    color: _themeService.textColor,
                                   ),
                                 ),
                                 const SizedBox(width: 8),
-                                const Icon(
+                                Icon(
                                   Icons.calendar_today,
                                   size: 16,
-                                  color: Color(0xFF1D1B20),
+                                  color: _themeService.textColor,
                                 ),
                               ],
                             ),
@@ -176,24 +189,24 @@ class _AnalysisViewState extends State<AnalysisView> {
                         ),
                       ),
                     ),
-                    const Divider(height: 1),
+                    Divider(height: 1, color: Colors.grey.shade300),
                     
                     InkWell(
                       onTap: () => _selectDate(context, false),
                       child: Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFD4FAE6),
+                        decoration: BoxDecoration(
+                          color: _themeService.containerColor,
                         ),
                         child: Row(
                           children: [
-                            const Text(
+                            Text(
                               'Период: конец',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w400,
-                                color: Color(0xFF1D1B20),
+                                color: _themeService.textColor,
                               ),
                             ),
                             const Spacer(),
@@ -201,17 +214,17 @@ class _AnalysisViewState extends State<AnalysisView> {
                               children: [
                                 Text(
                                   state.formattedEndDate,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w500,
-                                    color: Color(0xFF1D1B20),
+                                    color: _themeService.textColor,
                                   ),
                                 ),
                                 const SizedBox(width: 8),
-                                const Icon(
+                                Icon(
                                   Icons.calendar_today,
                                   size: 16,
-                                  color: Color(0xFF1D1B20),
+                                  color: _themeService.textColor,
                                 ),
                               ],
                             ),
@@ -219,37 +232,37 @@ class _AnalysisViewState extends State<AnalysisView> {
                         ),
                       ),
                     ),
-                    const Divider(height: 1),
+                    Divider(height: 1, color: Colors.grey.shade300),
                     
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFD4FAE6),
+                      decoration: BoxDecoration(
+                        color: _themeService.containerColor,
                       ),
                       child: Row(
                         children: [
-                          const Text(
+                          Text(
                             'Сумма',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w400,
-                              color: Color(0xFF1D1B20),
+                              color: _themeService.textColor,
                             ),
                           ),
                           const Spacer(),
                           Text(
                             state.formattedTotalAmount,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
-                              color: Color(0xFF1D1B20),
+                              color: _themeService.textColor,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const Divider(height: 1),
+                    Divider(height: 1, color: Colors.grey.shade300),
                   ],
                 ),
               ),
@@ -262,13 +275,17 @@ class _AnalysisViewState extends State<AnalysisView> {
           );
         },
       ),
+        );
+      },
     );
   }
 
   Widget _buildContent(BuildContext context, AnalysisState state) {
     if (state.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
+      return Center(
+        child: CircularProgressIndicator(
+          color: _themeService.headerColor,
+        ),
       );
     }
 
@@ -296,6 +313,10 @@ class _AnalysisViewState extends State<AnalysisView> {
               onPressed: () {
                 context.read<AnalysisBloc>().add(const AnalysisRefreshed());
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _themeService.headerColor,
+                foregroundColor: Colors.white,
+              ),
               child: const Text('Повторить'),
             ),
           ],
@@ -314,7 +335,7 @@ class _AnalysisViewState extends State<AnalysisView> {
                       Icon(
                         state.isIncome ? Icons.trending_up : Icons.trending_down,
                         size: 64,
-                        color: Colors.grey[400],
+                        color: _themeService.textColor.withValues(alpha: 0.4),
                       ),
                       const SizedBox(height: 16),
                       Text(
@@ -323,7 +344,7 @@ class _AnalysisViewState extends State<AnalysisView> {
                             : 'Нет расходов за выбранный период',
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.grey[600],
+                          color: _themeService.textColor.withValues(alpha: 0.6),
                         ),
                       ),
                     ],

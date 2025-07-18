@@ -215,12 +215,14 @@ class _TransactionScreenState extends State<TransactionScreen> {
   
   late final BankAccountRepository _accountRepository;
   late final CategoryRepository _categoryRepository;
+  late ThemeService _themeService;
 
   @override
   void initState() {
     super.initState();
     _accountRepository = ServiceLocator.bankAccountRepository;
     _categoryRepository = ServiceLocator.categoryRepository;
+    _themeService = ServiceLocator.themeService;
     _initializeData();
   }
 
@@ -539,69 +541,73 @@ class _TransactionScreenState extends State<TransactionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFEF7FF),
-      body: Column(
-        children: [
-          // Header with status bar padding
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 16,
-              left: 16,
-              right: 16,
-              bottom: 16,
-            ),
-            decoration: const BoxDecoration(
-              color: Color(0xFFb2AE881),
-            ),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.black),
-                  onPressed: () => Navigator.of(context).pop(),
+    return ListenableBuilder(
+      listenable: _themeService,
+      builder: (context, child) {
+        return Scaffold(
+          backgroundColor: _themeService.backgroundColor,
+          body: Column(
+            children: [
+              // Header with status bar padding
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + 16,
+                  left: 16,
+                  right: 16,
+                  bottom: 16,
                 ),
-                Expanded(
-                  child: Text(
-                    widget.isIncome ? 'Мои доходы' : 'Мои расходы',
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500,
+                decoration: BoxDecoration(
+                  color: _themeService.headerColor,
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.close, color: _themeService.textColor),
+                      onPressed: () => Navigator.of(context).pop(),
                     ),
-                    textAlign: TextAlign.center,
-                  ),
+                    Expanded(
+                      child: Text(
+                        widget.isIncome ? 'Мои доходы' : 'Мои расходы',
+                        style: TextStyle(
+                          color: _themeService.textColor,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.check, color: _themeService.textColor),
+                      onPressed: _isSaving ? null : _saveTransaction,
+                    ),
+                  ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.check, color: Colors.black),
-                  onPressed: _isSaving ? null : _saveTransaction,
-                ),
-              ],
-            ),
-          ),
+              ),
           
           // Content
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(child: CircularProgressIndicator(color: _themeService.headerColor))
                 : SingleChildScrollView(
                     child: Column(
                       children: [
                         // Account Selection
                         Container(
                           width: double.infinity,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFFEF7FF),
+                          decoration: BoxDecoration(
+                            color: _themeService.backgroundColor,
                           ),
                           child: Column(
                             children: [
                               ListTile(
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                title: const Text(
+                                title: Text(
                                   'Счет',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w400,
+                                    color: _themeService.textColor,
                                   ),
                                 ),
                                 trailing: Row(
@@ -612,16 +618,16 @@ class _TransactionScreenState extends State<TransactionScreen> {
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w400,
-                                        color: _selectedAccount != null ? Colors.black : Colors.grey,
+                                        color: _selectedAccount != null ? _themeService.textColor : Colors.grey,
                                       ),
                                     ),
                                     const SizedBox(width: 8),
-                                    const Icon(Icons.chevron_right, color: Colors.grey),
+                                    Icon(Icons.chevron_right, color: Colors.grey),
                                   ],
                                 ),
                                 onTap: _showAccountSelector,
                               ),
-                              const Divider(height: 1, color: Colors.grey),
+                              Divider(height: 1, color: Colors.grey.shade300),
                             ],
                           ),
                         ),
@@ -855,6 +861,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
           ),
         ],
       ),
+        );
+      },
     );
   }
 
